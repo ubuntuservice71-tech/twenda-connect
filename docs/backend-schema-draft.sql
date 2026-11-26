@@ -1,4 +1,5 @@
--- DESIGN DRAFT ONLY. Not an applied migration. Lovable must review and apply.
+-- Applied directly to Supabase project ovchyktojhrbydigwmzq on 2026-11-26.
+-- Migration: twende_initial_core_schema. Historical SQL; do not re-run on existing database.
 -- No client-side financial, ride-state, approval or role writes are enabled.
 begin;
 create table public.profiles (user_id uuid primary key references auth.users(id), full_name text not null check (length(trim(full_name)) between 1 and 150), created_at timestamptz not null default now());

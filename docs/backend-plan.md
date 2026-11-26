@@ -1,5 +1,5 @@
-# TWENDE — Plano de dados e segurança (não aplicado)
-O projecto Supabase ovchyktojhrbydigwmzq foi inspeccionado: sem tabelas públicas. A integração gerada pelo Lovable é preservada. AGENTS.md determina que alterações de schema sejam geridas no Lovable; não foram executadas migrações nem alterados ficheiros gerados.
+# TWENDE — Plano de dados e segurança
+Em 26-11-2026, por decisão do proprietário, a base de dados passou a ser gerida directamente no Supabase ovchyktojhrbydigwmzq, com o Lovable apenas para visualização. A migração twende_initial_core_schema criou as 13 tabelas. A integração gerada foi preservada; os tipos gerados ainda precisam de sincronização.
 
 ## Modelo proposto
 - profiles: user_id ligado a auth.users, nome e contactos; leitura e edição pelo titular.
