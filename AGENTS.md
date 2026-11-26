@@ -28,3 +28,10 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+
+- External service credentials are read only inside server handlers and never
+  returned to the browser; components import the `*.functions.ts` wrapper, and
+  the `*.server.ts` helper keeps the credential reads.
+
