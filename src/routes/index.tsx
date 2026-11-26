@@ -22,7 +22,7 @@ function Index() {
       <header className="bg-white border-b border-neutral-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-8 min-h-18 flex items-center justify-between gap-3">
           <button type="button" aria-label="TWENDE, início" onClick={()=>{setRole("");setShowAuth(false);}} className="flex items-center gap-2 text-2xl font-extrabold tracking-tight">
-            <span aria-hidden="true" className="inline-block w-3 h-7 rounded-sm bg-yellow-400"/>TWENDE
+            <img src="/brand/twende-logo.webp" alt="Twende — Vamos juntos." width={96} height={64} className="w-24 h-16 object-contain" />
           </button>
           <button type="button" className="tw-secondary flex items-center gap-2 text-sm" onClick={() => setShowAuth(v => !v)}><UserRound size={18} aria-hidden="true"/>{showAuth ? "Fechar conta" : "Minha conta"}</button>
         </div>

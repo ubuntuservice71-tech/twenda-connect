@@ -84,13 +84,13 @@ export function AdminPreview({onBack}: {onBack?: () => void}) {
       <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-neutral-200 bg-white px-4 py-2 sm:px-6">
         <div className="flex items-center gap-3">
           <button type="button" className="lg:hidden tw-secondary" aria-label={menu?"Fechar menu":"Abrir menu"} aria-expanded={menu} onClick={()=>setMenu(v=>!v)}>{menu?<X size={20}/>:<Menu size={20}/>}</button>
-          <span className="text-xl font-extrabold tracking-tight flex items-center gap-2"><span className="w-2.5 h-6 bg-yellow-400 rounded-sm" aria-hidden="true"/>TWENDE</span>
+          <span className="text-xl font-extrabold tracking-tight flex items-center gap-2"><img src="/brand/twende-logo.webp" alt="Twende — Vamos juntos." width={96} height={64} className="w-24 h-16 object-contain" /></span>
           <span className="hidden sm:inline text-sm text-neutral-500 border-l pl-3">Administração</span>
         </div>
         <button type="button" onClick={onBack} className="tw-secondary flex items-center gap-2 text-sm"><ArrowLeft size={16}/> <span>Voltar</span></button>
       </header>
       <div className="lg:grid lg:grid-cols-[236px_minmax(0,1fr)]">
-        <aside className={`${menu?"block":"hidden"} lg:block lg:sticky lg:top-[65px] lg:h-[calc(100dvh-65px)] overflow-y-auto border-r border-neutral-200 bg-white p-3`}>
+        <aside className={`${menu?"block":"hidden"} lg:block lg:sticky lg:top-[81px] lg:h-[calc(100dvh-81px)] overflow-y-auto border-r border-neutral-200 bg-white p-3`}>
           <label className="relative block"><span className="sr-only">Pesquisar módulo</span><Search size={16} className="absolute left-3 top-4 text-neutral-500"/><input className="tw-field !pl-9 !mt-0 text-sm" placeholder="Pesquisar módulo" value={query} onChange={e=>setQuery(e.target.value)}/></label>
           <nav aria-label="Menu administrativo" className="space-y-4 mt-4">
             {filtered.map(g=><div key={g.title}><p className="px-2 pb-1 text-xs font-semibold text-neutral-500">{g.title}</p>{g.items.map(({id,label,icon:Icon})=><button key={id} type="button" aria-current={tab===id?"page":undefined} onClick={()=>changeTab(id)} className={`w-full flex items-center gap-3 text-left rounded-lg px-3 py-1.5 text-sm !min-h-10 ${tab===id?"bg-yellow-100 font-bold text-neutral-900":"text-neutral-700 hover:bg-neutral-100"}`}><Icon size={17} className="shrink-0" aria-hidden="true"/><span>{label}</span></button>)}</div>)}
