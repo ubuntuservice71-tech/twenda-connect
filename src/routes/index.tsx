@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { AuthPanel } from "../components/auth-panel";
 import { AdminPreview } from "../components/admin-preview";
 import { DriverPreview } from "../components/driver-preview";
 import { PassengerPreview } from "../components/passenger-preview";
@@ -11,18 +12,19 @@ const apps = [
 ];
 function Index() {
   const [role, setRole] = useState("");
+  const [showAuth, setShowAuth] = useState(false);
   const app = apps.find((a) => a.id === role);
   return (
     <main className="min-h-screen bg-neutral-950 text-white flex flex-col">
       <header className="flex items-center justify-between p-6 border-b border-neutral-800">
         <strong className="text-3xl font-black tracking-tight text-yellow-400">TWENDE</strong>
-        <span className="text-sm">{app?.name || "Moçambique"}</span>
+        <button type="button" className="rounded-lg border border-yellow-400 px-3 py-2 text-yellow-400" onClick={() => setShowAuth(v => !v)}>{showAuth ? "Fechar conta" : "Minha conta"}</button>
       </header>
       <section className="w-full max-w-4xl mx-auto flex-1 px-6 py-16">
         <small className="text-yellow-400 font-bold tracking-widest">TWENDE · PROTÓTIPO</small>
         <h1 className="text-5xl font-black mt-4 mb-5">{app?.title || "Vamos juntos."}</h1>
         <p className="text-neutral-300 text-lg mb-8">{app?.description || "Escolhe a interface que pretendes explorar."}</p>
-        {app ? (
+        {showAuth ? <AuthPanel /> : app ? (
           <>
             {role === "passenger" ? <PassengerPreview /> : role === "driver" ? <DriverPreview /> : <AdminPreview />}
             <button type="button" onClick={() => setRole("")} className="text-yellow-400 underline">Voltar à pré-visualização</button>
