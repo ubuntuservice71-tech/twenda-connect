@@ -16,6 +16,7 @@ function Index() {
   const [showAuth, setShowAuth] = useState(false);
   const app = apps.find((a) => a.id === role);
   const back = () => { if(showAuth) setShowAuth(false); else setRole(""); };
+  if(role === "admin" && !showAuth) return <div className="twende-shell"><AdminPreview onBack={()=>setRole("")}/></div>;
   return (
     <main className="twende-shell flex flex-col">
       <header className="bg-white border-b border-neutral-200">
@@ -34,7 +35,7 @@ function Index() {
           <p className="text-neutral-600">{showAuth ? "Gerir o acesso à plataforma." : app?.description || "Escolhe como queres utilizar a TWENDE."}</p>
         </div>
         {showAuth ? <AuthPanel /> : app ? (
-          role === "passenger" ? <PassengerPreview /> : role === "driver" ? <DriverPreview /> : <AdminPreview />
+          role === "passenger" ? <PassengerPreview /> : <DriverPreview />
         ) : (
           <nav className="grid gap-3" aria-label="Interfaces de demonstração">
             {apps.map(({id,name,detail,icon:Icon}) => <button type="button" key={id} onClick={() => setRole(id)} className="tw-panel flex items-center gap-4 text-left hover:border-neutral-500">
