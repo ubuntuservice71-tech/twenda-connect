@@ -20,15 +20,15 @@ export function AuthPanel() {
     }).catch(() => { if (active) setMessage("Não foi possível iniciar a ligação. Actualiza a página."); });
     return () => { active = false; unsubscribe?.(); };
   }, []);
-  const field = "w-full rounded-xl border border-neutral-600 bg-neutral-950 p-3 text-white";
+  const field = "tw-field";
   return (
-    <section className="space-y-4 rounded-2xl border border-neutral-700 bg-neutral-900 p-5">
-      <h2 className="text-xl font-bold">Conta TWENDE</h2>
-      <p className="text-sm text-neutral-300">Autenticação real em fase de teste. As áreas de passageiro, motorista e administração continuam a ser demonstrações públicas, sem acesso a operações reais.</p>
+    <section className="space-y-4 tw-panel">
+      <h2 className="text-2xl font-bold">{account ? "A tua conta" : mode === "signup" ? "Cria a tua conta" : "Bem-vindo à TWENDE"}</h2>
+      <p className="text-sm text-neutral-600">Autenticação real em fase de teste. As áreas de passageiro, motorista e administração continuam a ser demonstrações públicas, sem acesso a operações reais.</p>
       {!ready ? <p>A iniciar a ligação…</p> : account ? (
         <div className="space-y-3">
           <p>Sessão iniciada: {account}</p>
-          <button type="button" disabled={busy} className="rounded-xl bg-yellow-400 p-3 font-bold text-black" onClick={async () => {
+          <button type="button" disabled={busy} className="tw-primary" onClick={async () => {
             setBusy(true); setMessage("");
             try {
               const { supabase } = await import("../integrations/supabase/client");
@@ -55,11 +55,11 @@ export function AuthPanel() {
         }}>
           <label>E-mail<input className={field} type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} /></label>
           <label>Palavra-passe<input className={field} type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} minLength={mode === "signup" ? 12 : 1} required value={password} onChange={e => setPassword(e.target.value)} /></label>
-          <button disabled={busy} className="rounded-xl bg-yellow-400 p-3 font-bold text-black disabled:opacity-50">{busy ? "A processar…" : mode === "signup" ? "Criar conta de teste" : "Entrar"}</button>
-          <button type="button" disabled={busy} className="text-yellow-400 underline" onClick={() => {setMode(mode === "signup" ? "login" : "signup");setPassword("");setMessage("");}}>{mode === "signup" ? "Já tenho conta" : "Criar conta"}</button>
+          <button disabled={busy} className="tw-primary disabled:opacity-50">{busy ? "A processar…" : mode === "signup" ? "Criar conta de teste" : "Entrar"}</button>
+          <button type="button" disabled={busy} className="tw-secondary" onClick={() => {setMode(mode === "signup" ? "login" : "signup");setPassword("");setMessage("");}}>{mode === "signup" ? "Já tenho conta" : "Criar conta"}</button>
         </form>
       )}
-      <p role="status" className="text-sm">{message}</p>
+      {message && <p role="status" className="tw-note">{message}</p>}
     </section>
   );
 }

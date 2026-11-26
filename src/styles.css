@@ -30,7 +30,7 @@
  */
 
 @theme inline {
-  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -77,19 +77,19 @@
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  --foreground: oklch(0.18 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
+  --primary: oklch(0.18 0 0);
   --primary-foreground: oklch(0.984 0.003 247.858);
   --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
+  --secondary-foreground: oklch(0.18 0 0);
   --muted: oklch(0.968 0.007 247.896);
   --muted-foreground: oklch(0.554 0.046 257.417);
   --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
+  --accent-foreground: oklch(0.18 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
   --border: oklch(0.929 0.013 255.508);
@@ -102,10 +102,10 @@
   --chart-5: oklch(0.769 0.188 70.08);
   --sidebar: oklch(0.984 0.003 247.858);
   --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
+  --sidebar-primary: oklch(0.18 0 0);
   --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
   --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
+  --sidebar-accent-foreground: oklch(0.18 0 0);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
 }
@@ -114,12 +114,12 @@
   color-scheme: dark;
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
+  --card: oklch(0.18 0 0);
   --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
+  --popover: oklch(0.18 0 0);
   --popover-foreground: oklch(0.984 0.003 247.858);
   --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
+  --primary-foreground: oklch(0.18 0 0);
   --secondary: oklch(0.279 0.041 260.031);
   --secondary-foreground: oklch(0.984 0.003 247.858);
   --muted: oklch(0.279 0.041 260.031);
@@ -136,7 +136,7 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
+  --sidebar: oklch(0.18 0 0);
   --sidebar-foreground: oklch(0.984 0.003 247.858);
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
@@ -156,3 +156,27 @@
     color: var(--color-foreground);
   }
 }
+
+/* TWENDE design system: shared across rider, driver, administration and account. */
+@layer base {
+  body { font-family: var(--font-sans); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  button, input, select, textarea { font: inherit; }
+  h1, h2, h3 { letter-spacing: -0.025em; }
+  :focus-visible { outline: 2px solid oklch(0.35 0 0); outline-offset: 3px; }
+}
+.twende-shell { color: oklch(0.18 0 0); background: oklch(0.98 0 0); min-height: 100dvh; }
+.twende-shell button { min-height: 48px; cursor: pointer; transition: background-color 150ms, border-color 150ms; }
+.twende-shell button:disabled { cursor: not-allowed; }
+.twende-shell input:not([type="checkbox"]) { min-height: 52px; display: block; margin-top: 6px; }
+.twende-shell input[type="checkbox"] { width: 20px; height: 20px; flex-shrink: 0; accent-color: oklch(0.18 0 0); }
+.twende-shell .tw-panel { background: white; border: 1px solid oklch(0.91 0 0); border-radius: 16px; padding: clamp(16px, 3vw, 24px); }
+.twende-shell .tw-primary { background: oklch(0.18 0 0); color: white; border: 1px solid transparent; border-radius: 12px; padding: 12px 18px; font-weight: 650; }
+.twende-shell .tw-primary:hover:not(:disabled) { background: oklch(0.32 0 0); }
+.twende-shell .tw-secondary { background: oklch(0.96 0 0); color: oklch(0.18 0 0); border: 1px solid oklch(0.89 0 0); border-radius: 12px; padding: 12px 18px; font-weight: 600; }
+.twende-shell .tw-secondary:hover:not(:disabled) { background: oklch(0.92 0 0); }
+.twende-shell .tw-field { width: 100%; border: 1px solid oklch(0.83 0 0); border-radius: 10px; background: oklch(0.97 0 0); color: oklch(0.18 0 0); padding: 12px 14px; }
+.twende-shell .tw-field:focus { background: white; border-color: oklch(0.18 0 0); }
+.twende-shell .tw-note { color: oklch(0.38 0 0); background: oklch(0.96 0.035 95); border-radius: 10px; padding: 10px 12px; font-size: 13px; line-height: 1.5; }
+.twende-shell .tw-money { font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: -0.035em; }
+.twende-shell .tw-choice[aria-pressed="true"] { background: oklch(0.96 0.095 95); border-color: oklch(0.25 0 0); box-shadow: inset 0 0 0 1px oklch(0.25 0 0); }
+@media (prefers-reduced-motion: reduce) { .twende-shell * { transition: none !important; } }

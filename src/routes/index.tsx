@@ -1,41 +1,50 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { ArrowLeft, ArrowRight, CarFront, Car, ShieldCheck, UserRound } from "lucide-react";
 import { AuthPanel } from "../components/auth-panel";
 import { AdminPreview } from "../components/admin-preview";
 import { DriverPreview } from "../components/driver-preview";
 import { PassengerPreview } from "../components/passenger-preview";
-export const Route = createFileRoute("/")({ component: Index });
+export const Route = createFileRoute("/")({ component: Index, head: () => ({ meta: [{title:"TWENDE — Vamos juntos"},{name:"description",content:"Mobilidade em Moçambique."}] }) });
 const apps = [
-  { id: "passenger", name: "Passageiro", title: "Para onde vamos?", description: "A tua próxima viagem começa aqui." },
-  { id: "driver", name: "Motorista", title: "Conduz com a TWENDE", description: "A tua próxima oportunidade começa aqui." },
-  { id: "admin", name: "Administração", title: "Centro de operações", description: "Gestão da plataforma TWENDE." },
+  { id: "passenger", name: "Passageiro", title: "Para onde vamos?", description: "Escolhe o destino, o veículo e propõe o teu preço.", icon: CarFront, detail: "Planear uma viagem" },
+  { id: "driver", name: "Motorista", title: "Conduz com a TWENDE", description: "Gere a tua disponibilidade, propostas e carteira.", icon: Car, detail: "Explorar a área do motorista" },
+  { id: "admin", name: "Administração", title: "Centro de operações", description: "Consulta os indicadores e configurações da plataforma.", icon: ShieldCheck, detail: "Explorar o painel de gestão" },
 ];
 function Index() {
   const [role, setRole] = useState("");
   const [showAuth, setShowAuth] = useState(false);
   const app = apps.find((a) => a.id === role);
+  const back = () => { if(showAuth) setShowAuth(false); else setRole(""); };
   return (
-    <main className="min-h-screen bg-neutral-950 text-white flex flex-col">
-      <header className="flex items-center justify-between p-6 border-b border-neutral-800">
-        <strong className="text-3xl font-black tracking-tight text-yellow-400">TWENDE</strong>
-        <button type="button" className="rounded-lg border border-yellow-400 px-3 py-2 text-yellow-400" onClick={() => setShowAuth(v => !v)}>{showAuth ? "Fechar conta" : "Minha conta"}</button>
+    <main className="twende-shell flex flex-col">
+      <header className="bg-white border-b border-neutral-200">
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 min-h-18 flex items-center justify-between gap-3">
+          <button type="button" aria-label="TWENDE, início" onClick={()=>{setRole("");setShowAuth(false);}} className="flex items-center gap-2 text-2xl font-extrabold tracking-tight">
+            <span aria-hidden="true" className="inline-block w-3 h-7 rounded-sm bg-yellow-400"/>TWENDE
+          </button>
+          <button type="button" className="tw-secondary flex items-center gap-2 text-sm" onClick={() => setShowAuth(v => !v)}><UserRound size={18} aria-hidden="true"/>{showAuth ? "Fechar conta" : "Minha conta"}</button>
+        </div>
       </header>
-      <section className="w-full max-w-4xl mx-auto flex-1 px-6 py-16">
-        <small className="text-yellow-400 font-bold tracking-widest">TWENDE · PROTÓTIPO</small>
-        <h1 className="text-5xl font-black mt-4 mb-5">{app?.title || "Vamos juntos."}</h1>
-        <p className="text-neutral-300 text-lg mb-8">{app?.description || "Escolhe a interface que pretendes explorar."}</p>
+      <section className={`w-full mx-auto flex-1 px-4 sm:px-8 py-6 sm:py-10 ${role==="admin"&&!showAuth?"max-w-6xl":"max-w-xl"}`}>
+        {(app || showAuth) && <button type="button" onClick={back} className="flex items-center gap-2 font-semibold mb-4"><ArrowLeft size={20} aria-hidden="true"/>Voltar</button>}
+        <div className="mb-6">
+          <span className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-600"><span className="h-2 w-2 rounded-full bg-yellow-400" aria-hidden="true"/>{showAuth ? "Conta" : app?.name || "Moçambique"} · Pré-visualização</span>
+          <h1 className="text-[clamp(2rem,5vw,3rem)] leading-tight font-bold mt-3 mb-2">{showAuth ? "Minha conta" : app?.title || "Vamos juntos."}</h1>
+          <p className="text-neutral-600">{showAuth ? "Gerir o acesso à plataforma." : app?.description || "Escolhe como queres utilizar a TWENDE."}</p>
+        </div>
         {showAuth ? <AuthPanel /> : app ? (
-          <>
-            {role === "passenger" ? <PassengerPreview /> : role === "driver" ? <DriverPreview /> : <AdminPreview />}
-            <button type="button" onClick={() => setRole("")} className="text-yellow-400 underline">Voltar à pré-visualização</button>
-          </>
+          role === "passenger" ? <PassengerPreview /> : role === "driver" ? <DriverPreview /> : <AdminPreview />
         ) : (
-          <nav className="grid gap-4" aria-label="Interfaces de demonstração">
-            {apps.map((a) => <button type="button" key={a.id} onClick={() => setRole(a.id)} className="flex justify-between items-center rounded-2xl bg-yellow-400 text-black font-bold text-lg p-5 hover:bg-yellow-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">{a.name}<span aria-hidden="true">→</span></button>)}
+          <nav className="grid gap-3" aria-label="Interfaces de demonstração">
+            {apps.map(({id,name,detail,icon:Icon}) => <button type="button" key={id} onClick={() => setRole(id)} className="tw-panel flex items-center gap-4 text-left hover:border-neutral-500">
+              <span className="flex shrink-0 h-14 w-14 items-center justify-center rounded-xl bg-yellow-100"><Icon size={26} aria-hidden="true"/></span>
+              <span className="flex-1"><span className="block text-lg font-bold">{name}</span><span className="block text-sm text-neutral-600">{detail}</span></span><ArrowRight size={20} aria-hidden="true"/>
+            </button>)}
           </nav>
         )}
       </section>
-      <footer className="p-6 text-center text-neutral-400 text-sm">TWENDE · Moçambique · Pré-visualização</footer>
+      <footer className="border-t border-neutral-200 p-4 text-center text-neutral-600 text-sm">TWENDE · Moçambique · Ambiente de demonstração</footer>
     </main>
   );
 }
