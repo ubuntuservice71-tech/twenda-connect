@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { AdminPreview } from "../components/admin-preview";
 import { DriverPreview } from "../components/driver-preview";
 import { PassengerPreview } from "../components/passenger-preview";
 export const Route = createFileRoute("/")({ component: Index });
@@ -17,16 +18,13 @@ function Index() {
         <strong className="text-3xl font-black tracking-tight text-yellow-400">TWENDE</strong>
         <span className="text-sm">{app?.name || "Moçambique"}</span>
       </header>
-      <section className="w-full max-w-2xl mx-auto flex-1 px-6 py-16">
-        <small className="text-yellow-400 font-bold tracking-widest">TWENDE · FASE 1</small>
+      <section className="w-full max-w-4xl mx-auto flex-1 px-6 py-16">
+        <small className="text-yellow-400 font-bold tracking-widest">TWENDE · PROTÓTIPO</small>
         <h1 className="text-5xl font-black mt-4 mb-5">{app?.title || "Vamos juntos."}</h1>
         <p className="text-neutral-300 text-lg mb-8">{app?.description || "Escolhe a interface que pretendes explorar."}</p>
         {app ? (
           <>
-            {role === "passenger" ? <PassengerPreview /> : role === "driver" ? <DriverPreview /> : <article className="rounded-2xl bg-neutral-900 border border-neutral-700 p-6 mb-6">
-              <h2 className="font-bold text-xl mb-2">Em desenvolvimento</h2>
-              <p>As funcionalidades operacionais e a autenticação serão disponibilizadas nas próximas fases.</p>
-            </article>}
+            {role === "passenger" ? <PassengerPreview /> : role === "driver" ? <DriverPreview /> : <AdminPreview />}
             <button type="button" onClick={() => setRole("")} className="text-yellow-400 underline">Voltar à pré-visualização</button>
           </>
         ) : (
