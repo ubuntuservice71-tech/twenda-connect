@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AdminModule } from "./admin-module";
 import { ArrowLeft, ArrowRight, LayoutDashboard, CalendarDays, MapPin, Map, CreditCard, CarFront, Users, Navigation, Wallet, FileCheck, Gift, MessageSquare, Ticket, Settings, Search, Menu, X, Tag, Clock, ShieldCheck, FileText, Globe, Image, HelpCircle, SlidersHorizontal, KeyRound, RefreshCw } from "lucide-react";
 
 const groups = [
@@ -8,10 +9,12 @@ const groups = [
   { title: "Configuração de corridas", items: [{id:"types",label:"Tipos de corrida",icon:CarFront},{id:"settings",label:"Políticas de cancelamento",icon:Settings}] },
   { title: "Gestão de utilizadores", items: [{id:"drivers",label:"Motoristas",icon:Users},{id:"customers",label:"Passageiros",icon:Users}] },
   { title: "Gestão de motoristas", items: [{id:"tracking",label:"Rastreamento de motoristas",icon:Navigation},{id:"cash",label:"Pontos de cobrança",icon:Wallet},{id:"documents",label:"Documentação",icon:FileCheck},{id:"incentives",label:"Incentivos",icon:Gift},{id:"withdrawals",label:"Pedidos de levantamento",icon:Wallet},{id:"driverTickets",label:"Ocorrências de motoristas",icon:Ticket}] },
-  { title: "Finanças e marketing", items: [{id:"wallet",label:"Carteiras e comissões",icon:Wallet},{id:"promos",label:"Códigos promocionais",icon:Tag},{id:"referrals",label:"Bónus por indicação",icon:Gift}] },
-  { title: "Atendimento e segurança", items: [{id:"messages",label:"Conversas e mensagens",icon:MessageSquare},{id:"tickets",label:"Tickets de suporte",icon:Ticket},{id:"appeals",label:"Contestações",icon:ShieldCheck},{id:"audit",label:"Auditoria",icon:Clock}] },
+  { title: "Marketing", items: [{id:"notifications",label:"Enviar notificações",icon:MessageSquare},{id:"promos",label:"Códigos promocionais",icon:Tag},{id:"referrals",label:"Bónus por indicação",icon:Gift},{id:"referralNetwork",label:"Rede de indicações",icon:Users}] },
+  { title: "Configuração fiscal", items: [{id:"taxes",label:"Regras fiscais por cidade",icon:FileText}] },
+  { title: "Finanças", items: [{id:"commissions",label:"Comissões",icon:Wallet},{id:"invoices",label:"Facturas",icon:FileText},{id:"transactions",label:"Transacções",icon:CreditCard},{id:"wallet",label:"Carteiras",icon:Wallet},{id:"walletTransactions",label:"Movimentos de carteira",icon:Wallet}] },
+  { title: "Atendimento e segurança", items: [{id:"refundSettings",label:"Configuração de reembolsos",icon:Settings},{id:"refunds",label:"Pedidos de reembolso",icon:Wallet},{id:"messages",label:"Conversas e mensagens",icon:MessageSquare},{id:"tickets",label:"Tickets de suporte",icon:Ticket},{id:"appeals",label:"Contestações",icon:ShieldCheck},{id:"audit",label:"Auditoria",icon:Clock}] },
   { title: "Conteúdos", items: [{id:"about",label:"Sobre nós",icon:FileText},{id:"privacy",label:"Política de privacidade",icon:ShieldCheck},{id:"terms",label:"Termos e condições",icon:FileText},{id:"contact",label:"Contactos",icon:MessageSquare},{id:"banners",label:"Imagens de banners",icon:Image},{id:"faq",label:"Perguntas frequentes",icon:HelpCircle}] },
-  { title: "Configurações", items: [{id:"appSettings",label:"Configurações da aplicação",icon:Settings},{id:"payments",label:"Métodos de pagamento",icon:CreditCard},{id:"referralSettings",label:"Valores de indicação",icon:Gift},{id:"currency",label:"Moeda",icon:Wallet},{id:"firebase",label:"Firebase / notificações",icon:Settings},{id:"languages",label:"Idiomas",icon:Globe},{id:"integrations",label:"Integrações",icon:SlidersHorizontal},{id:"subscriptionSettings",label:"Configuração de subscrições",icon:CreditCard},{id:"radius",label:"Raio de procura de motoristas",icon:MapPin}] },
+  { title: "Configurações", items: [{id:"appSettings",label:"Configurações da aplicação",icon:Settings},{id:"payments",label:"Métodos de pagamento",icon:CreditCard},{id:"referralSettings",label:"Valores de indicação",icon:Gift},{id:"currency",label:"Moeda",icon:Wallet},{id:"firebase",label:"Notificações e OTP",icon:Settings},{id:"languages",label:"Idiomas",icon:Globe},{id:"integrations",label:"Integrações",icon:SlidersHorizontal},{id:"subscriptionSettings",label:"Configuração de subscrições",icon:CreditCard},{id:"radius",label:"Raio de procura de motoristas",icon:MapPin}] },
   { title: "Utilizadores do sistema", items: [{id:"admins",label:"Administradores",icon:Users},{id:"roles",label:"Funções",icon:ShieldCheck},{id:"permissions",label:"Permissões",icon:KeyRound}] },
   { title: "Sistema", items: [{id:"updates",label:"Actualizações do sistema",icon:RefreshCw}] },
 ];
@@ -35,42 +38,6 @@ const metrics = [
   {label:"Tickets que exigem atenção",help:"Sem resposta há 24h",module:"tickets"},
   {label:"Tickets não atribuídos",help:"Sem agente responsável",module:"tickets"},
 ];
-const pending: Record<string,{description:string;columns:string[];approval?:boolean}> = {
-  about:{description:"Editar o conteúdo institucional da TWENDE.",columns:["Página","Última revisão","Estado"]},
-  privacy:{description:"Gerir a política de privacidade publicada após revisão jurídica.",columns:["Versão","Data","Estado"]},
-  terms:{description:"Gerir termos e condições após revisão jurídica.",columns:["Versão","Data","Estado"]},
-  contact:{description:"Gerir contactos públicos e canais oficiais de atendimento.",columns:["Canal","Contacto","Estado"]},
-  banners:{description:"Gerir imagens e campanhas exibidas nas aplicações.",columns:["Banner","Período","Estado"]},
-  faq:{description:"Gerir perguntas e respostas de apoio aos utilizadores.",columns:["Pergunta","Categoria","Estado"]},
-  appSettings:{description:"Configurações gerais das aplicações.",columns:["Parâmetro","Valor","Estado"]},
-  payments:{description:"Configuração de provedores de pagamento; nenhum método activo nesta demonstração.",columns:["Método","Provedor","Estado"],approval:true},
-  referralSettings:{description:"Definir valores e regras de indicação após aprovação.",columns:["Regra","Valor","Estado"],approval:true},
-  firebase:{description:"Configuração de notificações. Firebase não foi seleccionado como fornecedor; integração a avaliar.",columns:["Serviço","Estado"],approval:true},
-  languages:{description:"Gerir idiomas e traduções. Português de Moçambique é o idioma inicial.",columns:["Idioma","Estado"]},
-  integrations:{description:"Consultar integrações autorizadas, sem expor segredos ou chaves privadas.",columns:["Integração","Estado"]},
-  subscriptionSettings:{description:"Configurações de subscrições se este modelo for aprovado.",columns:["Parâmetro","Valor","Estado"],approval:true},
-  radius:{description:"Definir limites de procura e atribuição geográfica; valor por aprovar.",columns:["Zona","Raio","Estado"],approval:true},
-  admins:{description:"Gerir administradores autorizados. Nenhuma conta administrativa criada aqui.",columns:["Administrador","Função","Estado"]},
-  roles:{description:"Gerir funções de acesso com validação no servidor.",columns:["Função","Descrição","Estado"]},
-  permissions:{description:"Gerir permissões de acesso com privilégio mínimo; sem alteração real nesta demonstração.",columns:["Permissão","Função","Estado"]},
-  updates:{description:"Consultar versões e estado de actualização. Não executa actualizações.",columns:["Versão","Data","Estado"]},
-  plans:{description:"Gestão de planos, preços e condições. A TWENDE mantém o modelo aprovado de comissão por corrida até existir outra decisão.",columns:["Plano","Preço","Periodicidade","Estado"],approval:true},
-  subscriptions:{description:"Consulta e gestão de subscrições de motoristas, caso este modelo seja aprovado.",columns:["Motorista","Plano","Início","Estado"],approval:true},
-  customers:{description:"Consultar perfis, histórico de corridas e estado das contas dos passageiros.",columns:["Passageiro","Contacto","Corridas","Estado"]},
-  tracking:{description:"Visualizar motoristas disponíveis e corridas activas num mapa em tempo real. O GPS ainda não está integrado.",columns:["Motorista","Veículo","Última localização","Disponibilidade"]},
-  cash:{description:"Gerir pontos de cobrança ou carregamento presencial, caso sejam aprovados.",columns:["Ponto","Cidade","Responsável","Estado"],approval:true},
-  incentives:{description:"Gerir campanhas de incentivo e critérios de elegibilidade após aprovação comercial.",columns:["Campanha","Critério","Valor","Estado"],approval:true},
-  withdrawals:{description:"Analisar pedidos de levantamento caso o modelo de carteira venha a permitir levantamentos. Não há movimentações reais.",columns:["Pedido","Motorista","Montante","Estado"],approval:true},
-  driverTickets:{description:"Receber ocorrências e acompanhar a resolução dos problemas comunicados pelos motoristas.",columns:["Ocorrência","Motorista","Prioridade","Estado"]},
-  promos:{description:"Gerir códigos, validade e descontos após aprovação das regras comerciais.",columns:["Código","Desconto","Validade","Estado"],approval:true},
-  referrals:{description:"Gerir indicações e recompensas após aprovação das regras comerciais.",columns:["Referência","Beneficiário","Bónus","Estado"],approval:true},
-  messages:{description:"Centralizar conversas de corridas, mensagens urgentes e respostas do atendimento.",columns:["Conversa","Participante","Última mensagem","Estado"]},
-  tickets:{description:"Organizar tickets de suporte por prioridade, responsável e estado de resolução.",columns:["Ticket","Assunto","Responsável","Estado"]},
-  appeals:{description:"Analisar contestações de penalizações e cancelamentos, respeitando a política aprovada.",columns:["Contestação","Motivo","Data","Estado"]},
-  audit:{description:"Consultar o registo de actividades administrativas com acesso restrito.",columns:["Acção","Responsável","Entidade","Data"]},
-};
-
-
 const bookingColumns=["Código da corrida","Passageiro","Motorista","Partida","Destino","Valor total (MT)","Estado","Data de criação"];
 function EmptyTrend({title,legend}:{title:string;legend:string[]}) {
   return <article className="tw-panel !p-4 min-w-0 space-y-3">
@@ -109,14 +76,9 @@ export function AdminPreview({onBack}: {onBack?: () => void}) {
   const [bookingSearch,setBookingSearch]=useState("");
   const [pageSize,setPageSize]=useState("10");
   const [menu,setMenu]=useState(false);
-  const [catalog,setCatalog]=useState<Record<string,string[]>>({cities:[],zones:[],types:["Carro","Motociclo"]});
-  const [draft,setDraft]=useState("");
-  const [catalogError,setCatalogError]=useState("");
   const selected=allItems.find(item=>item.id===tab);
-  const changeTab=(id:string)=>{setTab(id);setMenu(false);setDraft("");setCatalogError("");};
+  const changeTab=(id:string)=>{setTab(id);setMenu(false);};
   const filtered=groups.map(g=>({...g,items:g.items.filter(i=>i.label.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()))})).filter(g=>g.items.length);
-  const isCatalog=tab==="cities"||tab==="zones"||tab==="types";
-  const info=pending[tab];
   return (
     <div className="min-h-dvh bg-neutral-50 text-neutral-900">
       <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-neutral-200 bg-white px-4 py-2 sm:px-6">
@@ -161,15 +123,7 @@ export function AdminPreview({onBack}: {onBack?: () => void}) {
             <h2 className="text-lg font-bold">Simulação e regras iniciais</h2>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{[["Candidaturas pendentes",status==="Pendente"?"1":"0"],["Motoristas aprovados",status==="Aprovado"?"1":"0"],["Corridas simuladas","1"],["Comissão configurada",saved.commission+"%"]].map(([label,value])=><article key={label} className={panel}><p className="text-sm text-neutral-600">{label}</p><strong className="text-2xl tw-money">{value}</strong></article>)}</div>
           </>}
-          {isCatalog && <section className={panel}>
-            <h2 className="text-xl font-bold">Catálogo de {selected?.label.toLocaleLowerCase()}</h2><p className="text-sm text-neutral-600">Adicionar e remover registos nesta demonstração local. Não altera a base de dados nem activa serviços.</p>
-            <form className="flex flex-wrap items-end gap-3" onSubmit={e=>{e.preventDefault();const name=draft.trim();if(!name)return;if((catalog[tab]||[]).some(n=>n.toLocaleLowerCase()===name.toLocaleLowerCase())){setCatalogError("Já existe um registo com esse nome.");return;}setCatalog(prev=>({...prev,[tab]:[...(prev[tab]||[]),name]}));setDraft("");setCatalogError("");}}><label className="flex-1 min-w-[180px]">Nome<input className={field} maxLength={100} required value={draft} onChange={e=>{setDraft(e.target.value);setCatalogError("");}}/></label><button className={primary} disabled={!draft.trim()}>Adicionar</button></form>
-            {catalogError&&<p role="alert" className="text-red-700 text-sm">{catalogError}</p>}
-            <div className="divide-y divide-neutral-200">{(catalog[tab]||[]).map(name=><div key={name} className="flex items-center justify-between gap-3 py-2"><span>{name}</span><button type="button" className="tw-secondary text-sm" onClick={()=>setCatalog(prev=>({...prev,[tab]:prev[tab].filter(n=>n!==name)}))} aria-label={"Remover "+name}>Remover</button></div>)}</div>
-            {!catalog[tab]?.length&&<p className="text-neutral-500 text-sm">Nenhum registo de demonstração.</p>}
-          </section>}
-          {tab==="currency" && <section className={panel}><h2 className="text-lg font-bold">Moeda da plataforma</h2><p>Metical moçambicano (MZN / MT)</p><p className="text-sm text-neutral-600">Valores financeiros em meticais. Alterações de moeda não estão disponíveis na demonstração.</p></section>}
-          {info && <section className={panel}><h2 className="text-xl font-bold">{selected?.label}</h2><p className="text-sm text-neutral-600">{info.description}</p><p className="tw-note">{info.approval?"Funcionalidade proposta; requer aprovação das regras de negócio.":"Integração operacional pendente."}</p><div className="overflow-x-auto"><table className="w-full text-sm text-left"><thead className="bg-neutral-100"><tr>{info.columns.map(c=><th key={c} scope="col" className="p-3 whitespace-nowrap font-semibold">{c}</th>)}</tr></thead><tbody><tr><td colSpan={info.columns.length} className="text-center p-8 text-neutral-500">Sem dados ligados a este módulo.</td></tr></tbody></table></div></section>}
+          {tab!=="overview" && <AdminModule key={tab} id={tab}/>}
       {(tab==="drivers"||tab==="documents") && <article className={panel}>
         <h2 className="text-xl font-bold">Candidatura de motorista fictício</h2><p>Estado: {status}</p><p className="text-sm">Simula a verificação de cada requisito antes de aprovar.</p>
         {documents.map(doc=><label key={doc} className="flex gap-3 items-center min-h-11 py-2 border-b border-neutral-100"><input type="checkbox" disabled={status!=="Pendente"} checked={checked.includes(doc)} onChange={e=>setChecked(prev=>e.target.checked?[...prev,doc]:prev.filter(x=>x!==doc))}/>{doc}</label>)}
