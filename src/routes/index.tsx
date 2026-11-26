@@ -7,7 +7,7 @@ import { DriverPreview } from "../components/driver-preview";
 import { PassengerPreview } from "../components/passenger-preview";
 export const Route = createFileRoute("/")({ component: Index, head: () => ({ meta: [{title:"TWENDE — Vamos juntos"},{name:"description",content:"Mobilidade em Moçambique."}] }) });
 const apps = [
-  { id: "passenger", name: "Passageiro", title: "Para onde vamos?", description: "Escolhe o destino, o veículo e propõe o teu preço.", icon: CarFront, detail: "Planear uma viagem" },
+  { id: "passenger", name: "Passageiro", title: "Para onde vamos?", description: "Escolhe o percurso, o veículo e propõe o teu preço.", icon: CarFront, detail: "Planear uma viagem" },
   { id: "driver", name: "Motorista", title: "Conduz com a TWENDE", description: "Gere a tua disponibilidade, propostas e carteira.", icon: Car, detail: "Explorar a área do motorista" },
   { id: "admin", name: "Administração", title: "Centro de operações", description: "Consulta os indicadores e configurações da plataforma.", icon: ShieldCheck, detail: "Explorar o painel de gestão" },
 ];
@@ -27,7 +27,7 @@ function Index() {
           <button type="button" className="tw-secondary flex items-center gap-2 text-sm" onClick={() => setShowAuth(v => !v)}><UserRound size={18} aria-hidden="true"/>{showAuth ? "Fechar conta" : "Minha conta"}</button>
         </div>
       </header>
-      <section className={`w-full mx-auto flex-1 px-4 sm:px-8 py-6 sm:py-10 ${role==="admin"&&!showAuth?"max-w-6xl":"max-w-xl"}`}>
+      <section className={`w-full mx-auto flex-1 px-4 sm:px-8 py-6 sm:py-10 ${role==="passenger"&&!showAuth?"max-w-2xl":"max-w-xl"}`}>
         {(app || showAuth) && <button type="button" onClick={back} className="flex items-center gap-2 font-semibold mb-4"><ArrowLeft size={20} aria-hidden="true"/>Voltar</button>}
         <div className="mb-6">
           <span className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-600"><span className="h-2 w-2 rounded-full bg-yellow-400" aria-hidden="true"/>{showAuth ? "Conta" : app?.name || "Moçambique"} · Pré-visualização</span>
