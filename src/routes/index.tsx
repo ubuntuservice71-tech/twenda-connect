@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { DriverPreview } from "../components/driver-preview";
 import { PassengerPreview } from "../components/passenger-preview";
 export const Route = createFileRoute("/")({ component: Index });
 const apps = [
@@ -22,7 +23,7 @@ function Index() {
         <p className="text-neutral-300 text-lg mb-8">{app?.description || "Escolhe a interface que pretendes explorar."}</p>
         {app ? (
           <>
-            {role === "passenger" ? <PassengerPreview /> : <article className="rounded-2xl bg-neutral-900 border border-neutral-700 p-6 mb-6">
+            {role === "passenger" ? <PassengerPreview /> : role === "driver" ? <DriverPreview /> : <article className="rounded-2xl bg-neutral-900 border border-neutral-700 p-6 mb-6">
               <h2 className="font-bold text-xl mb-2">Em desenvolvimento</h2>
               <p>As funcionalidades operacionais e a autenticação serão disponibilizadas nas próximas fases.</p>
             </article>}
