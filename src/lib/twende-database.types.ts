@@ -1319,7 +1319,10 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      admin_dashboard: {
+        Args: { p_from: string; p_until: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
