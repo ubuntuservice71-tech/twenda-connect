@@ -1,0 +1,2 @@
+# Corridas-piloto
+Pedido, convite administrativo, proposta/contraproposta, confirmação e cancelamento sem taxa ligados ao Supabase. Referência: relatório eTaxi p. 4. Apenas piloto: não efectuar deslocações nem pagamentos. Teste transaccional de pedido e cancelamento revertido. Teste de negociação com duas contas, compilação, filtros avançados, paginação, atribuição geográfica, estados operacionais e comissão pendentes.

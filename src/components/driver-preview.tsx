@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { DriverOnboarding } from "./driver-onboarding";
 import { DriverLocation } from "./driver-location";
+import {PilotRides} from "./pilot-rides";
 import { Wallet, MapPin, Flag } from "lucide-react";
 
 export function DriverPreview() {
@@ -16,7 +17,7 @@ export function DriverPreview() {
   const secondary = "tw-secondary";
   const proposed = Number(offer);
   const valid = Number.isFinite(proposed) && proposed > 0 && proposed * 0.1 <= balance;
-  if(!demo)return <><DriverOnboarding/><DriverLocation/><button type="button" className="tw-secondary mt-4" onClick={()=>setDemo(true)}>Explorar demonstração de corridas</button></>;
+  if(!demo)return <><DriverOnboarding/><DriverLocation/><PilotRides role="driver"/><button type="button" className="tw-secondary mt-4" onClick={()=>setDemo(true)}>Explorar demonstração de corridas</button></>;
   return (
     <section className="space-y-5 mb-6">
       <button type="button" className="tw-secondary" onClick={()=>setDemo(false)}>Voltar à candidatura</button><p className="tw-note">Demonstração local · Dados fictícios · Sem corridas ou cobranças reais.</p>

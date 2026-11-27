@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import {pilotCommand} from "./pilot-rides";
 import { ArrowRight, ArrowLeft, CarFront, Check, MapPin, LocateFixed, House, BriefcaseBusiness, Plane, Clock, Plus, Route, Info } from "lucide-react";
 
 type Vehicle = "car" | "bike";
@@ -15,7 +16,8 @@ function MotorcycleIcon() {
 const money = (value:number) => value.toLocaleString("pt-PT",{minimumFractionDigits:2,maximumFractionDigits:2})+" MT";
 const parsePrice = (value:string) => /^\d+(?:[.,]\d{1,2})?$/.test(value.trim()) ? Number(value.trim().replace(",",".")) : NaN;
 
-export function PassengerPreview() {
+export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boolean;onSubmitted?:()=>void}) {
+ const [submitting,setSubmitting]=useState(false),[submitError,setSubmitError]=useState("");
   const [origin,setOrigin]=useState("");
   const [destination,setDestination]=useState("");
   const [reference,setReference]=useState("");
@@ -59,7 +61,7 @@ export function PassengerPreview() {
   const cancelLocation=()=>{locationRequest.current++;setLocating(false);setLocationNotice("");};
   const reset=()=>{cancelLocation();setOrigin("");setDestination("");setReference("");setShowReference(false);setPrice("");setStage("edit");};
   return <section className="tw-rider space-y-5">
-    <p className="flex gap-2 items-center text-xs text-neutral-600" role="note"><Info size={16} className="shrink-0" aria-hidden="true"/>Modo demonstração — nenhuma corrida real será solicitada.</p>
+    <p className="flex gap-2 items-center text-xs text-neutral-600" role="note"><Info size={16} className="shrink-0" aria-hidden="true"/>Modo piloto — pedidos de teste, sem deslocações ou pagamentos.</p>
     {stage==="edit" ? <>
       <form id="twende-ride-form" className="space-y-5" onSubmit={e=>{e.preventDefault();if(valid){cancelLocation();setStage("review");}}}>
         <section className="tw-panel space-y-4" aria-labelledby="route-title">
@@ -138,7 +140,7 @@ export function PassengerPreview() {
         <p className="text-sm text-neutral-600">O pedido é apenas uma simulação. Não haverá contacto com motoristas nem qualquer cobrança.</p>
         <button type="button" className="tw-secondary w-full flex items-center justify-center gap-2" onClick={()=>setStage("edit")}><ArrowLeft size={17} aria-hidden="true"/>Editar proposta</button>
       </section>
-      <div className="tw-rider-action"><button type="button" className="tw-rider-cta w-full" onClick={()=>{setRecent(prev=>[destination.trim(),...prev.filter(p=>p!==destination.trim())].slice(0,5));setStage("confirmed");}}>Confirmar pedido (simulação)</button></div>
+      <div className="tw-rider-action">{submitError&&<p role="alert" className="text-sm text-red-700">{submitError}</p>}{!canSubmit&&<p className="text-sm">Entra e guarda o perfil para criar um pedido-piloto.</p>}<button type="button" className="tw-rider-cta w-full" disabled={!canSubmit||submitting} onClick={async()=>{setSubmitting(true);setSubmitError("");try{await pilotCommand({action:"request",origin:origin.trim(),destination:destination.trim(),vehicle_kind:vehicle==="car"?"car":"motorcycle",price_minor:Math.round(amount*100),pickup_reference:reference.trim()||null});onSubmitted?.();}catch{setSubmitError("Pedido recusado. Confirma o perfil e se já existe um pedido aberto.");}finally{setSubmitting(false);}}}>Registar pedido-piloto</button></div>
     </>:<section className="tw-panel text-center space-y-4" aria-live="polite">
       <span className="mx-auto flex w-14 h-14 rounded-full bg-yellow-100 items-center justify-center"><Check size={28} aria-hidden="true"/></span>
       <h2 className="text-xl font-bold">Simulação concluída</h2><p className="text-sm text-neutral-600">A tua proposta não foi enviada. Nenhuma corrida foi solicitada nem ocorreu cobrança.</p><button type="button" className="tw-rider-cta w-full" onClick={reset}>Planear outra viagem</button>

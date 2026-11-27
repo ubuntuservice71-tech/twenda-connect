@@ -399,6 +399,112 @@ export type Database = {
         }
         Relationships: []
       }
+      ride_commands: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          destination: string | null
+          driver_id: string | null
+          id: string
+          offer_id: string | null
+          origin: string | null
+          pickup_reference: string | null
+          price_minor: number | null
+          reason: string | null
+          ride_id: string | null
+          safety_exception: boolean
+          vehicle_kind: string | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          destination?: string | null
+          driver_id?: string | null
+          id?: string
+          offer_id?: string | null
+          origin?: string | null
+          pickup_reference?: string | null
+          price_minor?: number | null
+          reason?: string | null
+          ride_id?: string | null
+          safety_exception?: boolean
+          vehicle_kind?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          destination?: string | null
+          driver_id?: string | null
+          id?: string
+          offer_id?: string | null
+          origin?: string | null
+          pickup_reference?: string | null
+          price_minor?: number | null
+          reason?: string | null
+          ride_id?: string | null
+          safety_exception?: boolean
+          vehicle_kind?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ride_commands_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "driver_applications"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ride_commands_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "ride_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ride_commands_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ride_invites: {
+        Row: {
+          created_at: string
+          driver_id: string
+          ride_id: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          ride_id: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          ride_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ride_invites_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "driver_applications"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ride_invites_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ride_offers: {
         Row: {
           created_at: string
@@ -540,34 +646,46 @@ export type Database = {
       rides: {
         Row: {
           agreed_fare_minor: number | null
+          assigned_at: string | null
           created_at: string
           destination: string
           driver_id: string | null
           id: string
           origin: string
           passenger_id: string
+          pickup_reference: string | null
+          pilot: boolean
+          proposed_fare_minor: number | null
           status: string
           vehicle_kind: string
         }
         Insert: {
           agreed_fare_minor?: number | null
+          assigned_at?: string | null
           created_at?: string
           destination: string
           driver_id?: string | null
           id?: string
           origin: string
           passenger_id: string
+          pickup_reference?: string | null
+          pilot?: boolean
+          proposed_fare_minor?: number | null
           status?: string
           vehicle_kind: string
         }
         Update: {
           agreed_fare_minor?: number | null
+          assigned_at?: string | null
           created_at?: string
           destination?: string
           driver_id?: string | null
           id?: string
           origin?: string
           passenger_id?: string
+          pickup_reference?: string | null
+          pilot?: boolean
+          proposed_fare_minor?: number | null
           status?: string
           vehicle_kind?: string
         }
