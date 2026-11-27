@@ -5,6 +5,7 @@ import { AuthPanel } from "../components/auth-panel";
 import { AdminGate } from "../components/admin-gate";
 import { DriverPreview } from "../components/driver-preview";
 import { PassengerArea } from "../components/passenger-area";
+import { SessionBoundary } from "../components/session-boundary";
 export const Route = createFileRoute("/")({ component: Index, head: () => ({ meta: [{title:"TWENDE — Vamos juntos"},{name:"description",content:"Mobilidade em Moçambique."}] }) });
 const apps = [
   { id: "passenger", name: "Passageiro", title: "Para onde vamos?", description: "Escolhe o percurso, o veículo e propõe o teu preço.", icon: CarFront, detail: "Planear uma viagem" },
@@ -35,7 +36,7 @@ function Index() {
           <p className="text-neutral-600">{showAuth ? "Gerir o acesso à plataforma." : app?.description || "Escolhe como queres utilizar a TWENDE."}</p>
         </div>
         {showAuth ? <AuthPanel /> : app ? (
-          role === "passenger" ? <PassengerArea /> : <DriverPreview />
+          <SessionBoundary>{role === "passenger" ? <PassengerArea /> : <DriverPreview />}</SessionBoundary>
         ) : (
           <nav className="grid gap-3" aria-label="Interfaces de demonstração">
             {apps.map(({id,name,detail,icon:Icon}) => <button type="button" key={id} onClick={() => setRole(id)} className="tw-panel flex items-center gap-4 text-left hover:border-neutral-500">

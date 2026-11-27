@@ -4,8 +4,8 @@ import { ArrowLeft, ChevronDown, Filter, Search, SlidersHorizontal, Plus } from 
 import { adminModules } from "./admin-module-spec";
 
 function parseField(raw:string) {
-  const [name,rest=""]=raw.split(":");
-  const [labelWithStar,type="text"]=name.split("@");
+  const [name="",rest=""]=raw.split(":");
+  const [labelWithStar="",type="text"]=name.split("@");
   return {label:labelWithStar.replace("*",""),required:labelWithStar.includes("*"),type,options:rest?rest.split(","):[]};
 }
 type Draft = Record<string,string>;
@@ -32,6 +32,7 @@ export function AdminModule({id}:{id:string}) {
   const [message,setMessage]=useState("");
   useEffect(()=>{let alive=true;if(!persistent)return;setReady(false);void (async()=>{try{const c=await driverClient();const r=await c.from(table).select("id,payload").eq("module",id).order("updated_at",{ascending:false});if(r.error)throw Error();if(!alive)return;const data=r.data??[];const mapped=data.map(x=>Object.fromEntries(Object.entries((x.payload??{}) as Record<string,unknown>).filter(([,v])=>typeof v==="string")) as Draft);setIds(data.map(x=>x.id));setRows(mapped);if(spec&&!spec.columns.length&&mapped[0])setDraft(mapped[0]);setReady(true);}catch{if(alive)setMessage("Não foi possível carregar os rascunhos. Reabre o módulo.");}})();return()=>{alive=false;};},[id,persistent]);
   if(!spec)return null;
+  if(!persistent&&id!=="currency")return <section className="tw-panel space-y-3"><h2 className="text-xl font-bold">{spec.title}</h2><p className="tw-note">Módulo ainda sem integração operacional. A criação de registos fictícios foi desactivada para evitar confusão.</p><p className="text-sm">{spec.note}</p><details><summary>Campos previstos</summary>{spec.sections.map(section=><div key={section.title}><h3 className="font-semibold mt-3">{section.title}</h3><p className="text-sm">{section.fields.map(f=>parseField(f).label).join(" · ")}</p></div>)}</details></section>;
   if(id==="currency")return <section className="tw-panel space-y-3"><h2 className="text-xl font-bold">Moeda da plataforma</h2><p>Código: MZN</p><p>Símbolo: MT</p><p>Nome: Metical moçambicano</p><p className="tw-note">Moeda operacional fixa. Alterações exigem revisão dos valores financeiros e das integrações.</p></section>;
   const isSettings=!spec.columns.length && spec.sections.length>0;
   const visible=spec.columns.filter(c=>!hidden.includes(c));

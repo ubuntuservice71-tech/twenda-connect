@@ -24,7 +24,7 @@ export function AuthPanel() {
   return (
     <section className="space-y-4 tw-panel">
       <h2 className="text-2xl font-bold">{account ? "A tua conta" : mode === "signup" ? "Cria a tua conta" : "Bem-vindo à TWENDE"}</h2>
-      <p className="text-sm text-neutral-600">Autenticação real em fase de teste. As áreas de passageiro, motorista e administração continuam a ser demonstrações públicas, sem acesso a operações reais.</p>
+      <p className="text-sm text-neutral-600">Autenticação real em fase de teste. Os perfis e pedidos de teste são guardados no Supabase; o painel administrativo requer autorização. Não há viagens ou pagamentos reais.</p>
       {!ready ? <p>A iniciar a ligação…</p> : account ? (
         <div className="space-y-3">
           <p>Sessão iniciada: {account}</p>
@@ -34,7 +34,7 @@ export function AuthPanel() {
               const { supabase } = await import("../integrations/supabase/client");
               const { error } = await supabase.auth.signOut();
               if (error) throw error;
-              setAccount(null); setMessage("Sessão terminada.");
+              setAccount(null); setPassword(""); setEmail(""); setMessage("Sessão terminada.");
             } catch { setMessage("Não foi possível terminar a sessão. Tenta novamente."); }
             finally { setBusy(false); }
           }}>Terminar sessão</button>
