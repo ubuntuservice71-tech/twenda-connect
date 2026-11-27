@@ -10,9 +10,9 @@ export type TileCoordinate={x:number;y:number};
 export function validTile(z:number,p:TileCoordinate){return Number.isInteger(z)&&z>=3&&z<=18&&Number.isInteger(p.x)&&Number.isInteger(p.y)&&p.x>=0&&p.y>=0&&p.x<2**z&&p.y<2**z;}
 
 const launchCity={center:[35.2459,-13.2999]};
-const cors={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, apikey, content-type, x-client-info","Access-Control-Allow-Methods":"POST, OPTIONS","Cache-Control":"no-store"};
+const cors={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, apikey, content-type, x-client-info, x-supabase-api-version, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version","Access-Control-Allow-Methods":"POST, OPTIONS","Cache-Control":"no-store"};
 const reply=(body:unknown,status=200)=>Response.json(body,{status,headers:cors});
-async function request(url:URL):Promise<unknown>{const r=await fetch(url,{redirect:"error",signal:AbortSignal.timeout(10000),headers:{Accept:"application/json"}});if(!r.ok)throw Error("Provider unavailable");const s=await r.text();if(s.length>2000000)throw Error("Response too large");return JSON.parse(s);}
+async function request(url:URL):Promise<unknown>{const r=await fetch(url,{redirect:"error",signal:AbortSignal.timeout(10000),headers:{Accept:"application/json"}});if(!r.ok){console.warn("maps_provider_http",r.status);throw Error("Provider unavailable");}const s=await r.text();if(s.length>2000000)throw Error("Response too large");return JSON.parse(s);}
 function geoKey(){return Deno.env.get("TWENDE_GEOAPIFY_API_KEY")?.trim()||null;}
 function geoUrl(path:string,key:string){const u=new URL("https://api.geoapify.com/v1/"+path);u.searchParams.set("apiKey",key);return u;}
 export async function geoSearch(query:string,key:string){const u=geoUrl("geocode/search",key);u.searchParams.set("text",query);u.searchParams.set("format","json");u.searchParams.set("filter","circle:35.2459,-13.2999,20000");u.searchParams.set("bias","proximity:"+launchCity.center.join(","));u.searchParams.set("lang","pt");u.searchParams.set("limit","8");return parseGeoapifyPlaces(await request(u));}
@@ -26,16 +26,17 @@ export async function geoTiles(z:number,tiles:TileCoordinate[]):Promise<{status:
  const images=results.filter((p):p is NonNullable<typeof p>=>p!==null);return {status:images.length===tiles.length?"ok":"unavailable",tiles:images};
 }
 
+function defaultKey(name:string):string|undefined{try{const v=JSON.parse(Deno.env.get(name)||"{}");return typeof v.default==="string"?v.default:undefined;}catch{return undefined;}}
 Deno.serve(async(req:Request)=>{
  if(req.method==="OPTIONS")return new Response(null,{status:204,headers:cors});
  if(req.method!=="POST")return reply({error:"method"},405);
  try{
  const auth=req.headers.get("authorization");
  if(!auth?.startsWith("Bearer ")||auth.length>8192)return reply({error:"unauthorized"},401);
- const url=Deno.env.get("SUPABASE_URL"),anon=Deno.env.get("SUPABASE_ANON_KEY"),service=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
- if(!url||!anon||!service)return reply({error:"configuration"},503);
+ const url=Deno.env.get("SUPABASE_URL"),anon=defaultKey("SUPABASE_PUBLISHABLE_KEYS")||Deno.env.get("SUPABASE_ANON_KEY"),service=defaultKey("SUPABASE_SECRET_KEYS")||Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+ if(!url||!anon||!service){console.warn("maps_runtime_configuration_missing");return reply({error:"configuration"},503);}
  const u=await fetch(url+"/auth/v1/user",{headers:{apikey:anon,Authorization:auth},signal:AbortSignal.timeout(5000)});
- if(!u.ok)return reply({error:"unauthorized"},401);
+ if(!u.ok){console.warn("maps_auth_http",u.status);return reply({error:"unauthorized"},401);}
  const user=await u.json();
  if(typeof user.id!=="string"||user.is_anonymous||(!user.email_confirmed_at&&!user.phone_confirmed_at))return reply({error:"confirmed_account_required"},403);
  const raw=await req.text();if(raw.length>8192)return reply({error:"size"},413);
@@ -48,8 +49,8 @@ Deno.serve(async(req:Request)=>{
  else if(body.action==="tiles"){if(!Array.isArray(body.tiles)||body.tiles.length<1||body.tiles.length>9||body.tiles.some((t:TileCoordinate)=>!t||!validTile(body.z,t))||new Set(body.tiles.map((t:TileCoordinate)=>t.x+"/"+t.y)).size!==body.tiles.length)return reply({error:"invalid_tiles"},400);units=body.tiles.length;}
  else return reply({error:"invalid_action"},400);
  if(!key)return reply({status:"unconfigured",places:[],route:null,tiles:[]});
- const budget=await fetch(url+"/rest/v1/rpc/reserve_map_api_budget",{method:"POST",headers:{apikey:service,Authorization:"Bearer "+service,"Content-Type":"application/json"},body:JSON.stringify({p_user:user.id,p_units:units}),signal:AbortSignal.timeout(5000)});
- if(!budget.ok)return reply({status:"unavailable",places:[],route:null,tiles:[]});
+ const budget=await fetch(url+"/rest/v1/rpc/reserve_map_api_budget",{method:"POST",headers:{apikey:service,...(service.startsWith("sb_secret_")?{}:{Authorization:"Bearer "+service}),"Content-Type":"application/json"},body:JSON.stringify({p_user:user.id,p_units:units}),signal:AbortSignal.timeout(5000)});
+ if(!budget.ok){console.warn("maps_budget_http",budget.status);return reply({status:"unavailable",reason:"budget",places:[],route:null,tiles:[]});}
  if(await budget.json()!==true)return reply({status:"limited",places:[],route:null,tiles:[]});
  try{
  if(body.action==="search")return reply({status:"ok",places:await geoSearch(body.query.trim(),key)});
@@ -57,6 +58,6 @@ Deno.serve(async(req:Request)=>{
  if(body.action==="reverse"){const place=await reverse(body.point,key);return reply({status:"ok",place});}
  if(body.action==="route"){const route=await geoRoute(body.from,body.to,body.vehicle,key);return reply({status:route?"ok":"unavailable",route});}
  return reply(await geoTiles(body.z,body.tiles));
- }catch{return reply({status:"unavailable",places:[],route:null,tiles:[]});}
- }catch{return reply({error:"request_failed"},500);}
+ }catch{console.warn("maps_provider_failed");return reply({status:"unavailable",reason:"provider",places:[],route:null,tiles:[]});}
+ }catch{console.warn("maps_request_failed");return reply({error:"request_failed"},500);}
 });
