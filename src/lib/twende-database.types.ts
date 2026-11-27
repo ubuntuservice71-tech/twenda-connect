@@ -489,6 +489,38 @@ export type Database = {
         }
         Relationships: []
       }
+      pilot_ride_ratings: {
+        Row: {
+          created_at: string
+          rating: number
+          reviewee_id: string
+          reviewer_id: string
+          ride_id: string
+        }
+        Insert: {
+          created_at?: string
+          rating: number
+          reviewee_id: string
+          reviewer_id: string
+          ride_id: string
+        }
+        Update: {
+          created_at?: string
+          rating?: number
+          reviewee_id?: string
+          reviewer_id?: string
+          ride_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_ride_ratings_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pilot_topup_requests: {
         Row: {
           amount_minor: number
@@ -651,6 +683,7 @@ export type Database = {
           origin: string | null
           pickup_reference: string | null
           price_minor: number | null
+          rating: number | null
           reason: string | null
           ride_id: string | null
           safety_exception: boolean
@@ -667,6 +700,7 @@ export type Database = {
           origin?: string | null
           pickup_reference?: string | null
           price_minor?: number | null
+          rating?: number | null
           reason?: string | null
           ride_id?: string | null
           safety_exception?: boolean
@@ -683,6 +717,7 @@ export type Database = {
           origin?: string | null
           pickup_reference?: string | null
           price_minor?: number | null
+          rating?: number | null
           reason?: string | null
           ride_id?: string | null
           safety_exception?: boolean
@@ -886,8 +921,12 @@ export type Database = {
       rides: {
         Row: {
           agreed_fare_minor: number | null
+          arrived_at: string | null
           assigned_at: string | null
+          cancelled_at: string | null
+          completed_at: string | null
           created_at: string
+          departed_at: string | null
           destination: string
           driver_id: string | null
           id: string
@@ -896,13 +935,18 @@ export type Database = {
           pickup_reference: string | null
           pilot: boolean
           proposed_fare_minor: number | null
+          started_at: string | null
           status: string
           vehicle_kind: string
         }
         Insert: {
           agreed_fare_minor?: number | null
+          arrived_at?: string | null
           assigned_at?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
           created_at?: string
+          departed_at?: string | null
           destination: string
           driver_id?: string | null
           id?: string
@@ -911,13 +955,18 @@ export type Database = {
           pickup_reference?: string | null
           pilot?: boolean
           proposed_fare_minor?: number | null
+          started_at?: string | null
           status?: string
           vehicle_kind: string
         }
         Update: {
           agreed_fare_minor?: number | null
+          arrived_at?: string | null
           assigned_at?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
           created_at?: string
+          departed_at?: string | null
           destination?: string
           driver_id?: string | null
           id?: string
@@ -926,6 +975,7 @@ export type Database = {
           pickup_reference?: string | null
           pilot?: boolean
           proposed_fare_minor?: number | null
+          started_at?: string | null
           status?: string
           vehicle_kind?: string
         }
