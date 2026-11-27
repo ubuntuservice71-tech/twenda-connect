@@ -213,6 +213,60 @@ export type Database = {
         }
         Relationships: []
       }
+      cms_content: {
+        Row: {
+          address: string | null
+          audience: string
+          body: string
+          category: string
+          content_key: string
+          email: string | null
+          id: string
+          kind: string
+          locale: string
+          phone: string | null
+          sort_order: number
+          status: string
+          title: string
+          updated_at: string
+          working_hours: string | null
+        }
+        Insert: {
+          address?: string | null
+          audience?: string
+          body: string
+          category?: string
+          content_key: string
+          email?: string | null
+          id?: string
+          kind: string
+          locale?: string
+          phone?: string | null
+          sort_order?: number
+          status?: string
+          title: string
+          updated_at?: string
+          working_hours?: string | null
+        }
+        Update: {
+          address?: string | null
+          audience?: string
+          body?: string
+          category?: string
+          content_key?: string
+          email?: string | null
+          id?: string
+          kind?: string
+          locale?: string
+          phone?: string | null
+          sort_order?: number
+          status?: string
+          title?: string
+          updated_at?: string
+          working_hours?: string | null
+        }
+        Relationships: []
+      }
       driver_applications: {
         Row: {
           created_at: string

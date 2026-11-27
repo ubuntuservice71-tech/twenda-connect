@@ -1,0 +1,2 @@
+# Gestão de conteúdos
+Referência eTaxi módulos 30–35. Páginas institucionais, contactos e FAQ com rascunho e publicação explícita, conteúdo em texto simples, PT-MZ/EN e público-alvo como filtro de apresentação (não autorização). Textos jurídicos bloqueados como rascunho no servidor até revisão. Teste SQL de visibilidade anónima revertido. Banners continuam em marketing_drafts, sem upload/publicação. Editor rico, agrupamento FAQ, histórico de versões, publicação jurídica e testes de compilação pendentes. Nenhum conteúdo real publicado automaticamente.
