@@ -354,6 +354,78 @@ export type Database = {
           },
         ]
       }
+      payment_methods: {
+        Row: {
+          code: string
+          currency: string
+          enabled: boolean
+          mode: string
+          name: string
+        }
+        Insert: {
+          code: string
+          currency?: string
+          enabled?: boolean
+          mode?: string
+          name: string
+        }
+        Update: {
+          code?: string
+          currency?: string
+          enabled?: boolean
+          mode?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      pilot_topup_requests: {
+        Row: {
+          amount_minor: number
+          created_at: string
+          driver_id: string
+          id: string
+          method: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          amount_minor: number
+          created_at?: string
+          driver_id: string
+          id?: string
+          method: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          amount_minor?: number
+          created_at?: string
+          driver_id?: string
+          id?: string
+          method?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_topup_requests_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "driver_applications"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "pilot_topup_requests_method_fkey"
+            columns: ["method"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       pilot_wallet_entries: {
         Row: {
           actor_id: string

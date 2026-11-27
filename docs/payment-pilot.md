@@ -1,0 +1,2 @@
+# Pagamentos — piloto
+Referência eTaxi p. 26, adaptada para M-Pesa, e-Mola, mKesh e numerário. Todos desactivados por restrição do servidor; não há ligação externa nem sandbox de fornecedor. Pedidos fictícios de motoristas aprovados, decisão independente de admin, crédito de teste atómico com referência única. Nenhum saldo real alterado. Credenciais, callbacks autenticados, reconciliação externa, numerário em corrida e testes completos pendentes. Não enviar dinheiro real.
