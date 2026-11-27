@@ -354,6 +354,63 @@ export type Database = {
           },
         ]
       }
+      pilot_wallet_entries: {
+        Row: {
+          actor_id: string
+          amount_minor: number
+          balance_after_minor: number
+          commission_bps: number | null
+          created_at: string
+          driver_id: string
+          fare_minor: number | null
+          id: string
+          kind: string
+          reference: string
+          ride_id: string | null
+        }
+        Insert: {
+          actor_id: string
+          amount_minor: number
+          balance_after_minor: number
+          commission_bps?: number | null
+          created_at?: string
+          driver_id: string
+          fare_minor?: number | null
+          id?: string
+          kind: string
+          reference: string
+          ride_id?: string | null
+        }
+        Update: {
+          actor_id?: string
+          amount_minor?: number
+          balance_after_minor?: number
+          commission_bps?: number | null
+          created_at?: string
+          driver_id?: string
+          fare_minor?: number | null
+          id?: string
+          kind?: string
+          reference?: string
+          ride_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_wallet_entries_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "driver_applications"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "pilot_wallet_entries_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_settings: {
         Row: {
           absence_fee_minor: number | null
@@ -788,6 +845,13 @@ export type Database = {
             foreignKeyName: "wallet_entries_driver_id_fkey"
             columns: ["driver_id"]
             isOneToOne: false
+            referencedRelation: "wallet_summaries"
+            referencedColumns: ["driver_id"]
+          },
+          {
+            foreignKeyName: "wallet_entries_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
             referencedRelation: "wallets"
             referencedColumns: ["driver_id"]
           },
@@ -863,7 +927,43 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      pilot_wallet_summaries: {
+        Row: {
+          balance_minor: number | null
+          credits_minor: number | null
+          debits_minor: number | null
+          driver_id: string | null
+          last_transaction: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_wallet_entries_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "driver_applications"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      wallet_summaries: {
+        Row: {
+          balance_minor: number | null
+          credits_minor: number | null
+          currency: string | null
+          debits_minor: number | null
+          driver_id: string | null
+          last_transaction: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallets_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "driver_applications"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never
