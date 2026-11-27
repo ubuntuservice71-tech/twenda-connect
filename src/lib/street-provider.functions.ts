@@ -4,7 +4,7 @@ type Status='ok'|'unconfigured'|'unavailable'|'limited';
 const mapsUrl="https://ovchyktojhrbydigwmzq.supabase.co/functions/v1/twende-maps";
 const publishableKey="sb_publishable_B88rSiYs2CqUJ5bzWnj0Pw_3CBfMAqc";
 export class MapsRequestError extends Error {constructor(public code:string){super(code);}}
-export function mapsErrorMessage(e:unknown){const code=e instanceof MapsRequestError?e.code:'';return code==='session'||code==='401'||code==='403'?'Sessão não autorizada para mapas. Volta a iniciar sessão.':code==='404'?'Função de mapas não encontrada.':code==='503'?'Configuração do servidor de mapas incompleta.':code==='network'?'Não foi possível contactar o servidor de mapas. Verifica a ligação e tenta de novo.':'Serviço de mapas indisponível. Tenta novamente.';}
+export function mapsErrorMessage(e:unknown){const code=e instanceof MapsRequestError?e.code:e instanceof Error&&e.message==='session'?'session':'';return code==='session'||code==='401'||code==='403'?'Sessão não autorizada para mapas. Volta a iniciar sessão.':code==='404'?'Função de mapas não encontrada.':code==='503'?'Configuração do servidor de mapas incompleta.':code==='500'?'Erro interno na função de mapas (HTTP 500).':code==='429'?'Limite de pedidos atingido. Aguarda antes de tentar novamente.':code==='response'?'O servidor devolveu uma resposta inválida.':code==='network'?'Não foi possível contactar o servidor de mapas. Verifica a ligação e tenta de novo.':/^\d{3}$/.test(code)?'Servidor de mapas: HTTP '+code+'.':'Não foi possível preparar a pesquisa. Verifica a sessão e tenta novamente.';}
 
 type Args<T>={data:T;headers:Record<string,string>};
 async function invoke<T>(action:string,args:Args<object>):Promise<T>{

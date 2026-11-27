@@ -4,11 +4,11 @@ import {driverClient} from "./driver-shared";
 import {autocompleteStreet,searchStreet,reverseStreet,mapsErrorMessage} from "../lib/street-provider.functions";
 import type {Place} from "../lib/street-geometry";
 import type {Point} from "../lib/geography";
-async function headers(){const c=await driverClient();const s=await c.auth.getSession();if(!s.data.session)throw Error("session");return {Authorization:"Bearer "+s.data.session.access_token};}
+async function headers(){const c=await driverClient();const s=await c.auth.getSession();if(s.error||!s.data.session)throw Error("session");return {Authorization:"Bearer "+s.data.session.access_token};}
 export async function addressForPoint(p:Point){const r=await reverseStreet({data:{point:[p[0],p[1]]},headers:await headers()});return r.status==="ok"?r.place?.label??null:null;}
 export function PlaceSuggestions({query,active,onPick}:{query:string;active:boolean;onPick:(p:Place)=>void}){
  const q=query.trim();const [result,setResult]=useState<{q:string;places:Place[];status:string;message?:string|undefined}|null>(null),[manual,setManual]=useState(0);
- useEffect(()=>{if(!active||q.length<3)return;let alive=true;setResult(null);const t=setTimeout(()=>{void (async()=>{try{const args={data:{query:q},headers:await headers()};const r=manual?await searchStreet(args):await autocompleteStreet(args);if(alive)setResult({q,status:r.status,places:r.places??[],message:r.reason==='budget'?'Não foi possível validar a quota no servidor.':r.reason==='provider'?'O fornecedor Geoapify não respondeu à pesquisa.':undefined});}catch(e){if(alive)setResult({q,status:"unavailable",places:[],message:mapsErrorMessage(e)});}})();},manual?0:550);return()=>{alive=false;clearTimeout(t);};},[active,q,manual]);
+ useEffect(()=>{if(!active||q.length<3)return;let alive=true;setResult(null);const t=setTimeout(()=>{void (async()=>{try{const args={data:{query:q},headers:await headers()};const r=manual?await searchStreet(args):await autocompleteStreet(args);if(alive)setResult({q,status:r.status,places:r.places??[],message:r.reason==='budget'?'Não foi possível validar a quota no servidor.':r.reason==='provider'?'O fornecedor Geoapify não respondeu à pesquisa.':undefined});}catch(e){if(alive)setResult({q,status:"unavailable",places:[],message:mapsErrorMessage(e)});}})();},manual?0:800);return()=>{alive=false;clearTimeout(t);};},[active,q,manual]);
  useEffect(()=>{setManual(0);},[q,active]);
  if(!active||q.length<3)return null;
  const data=result?.q===q?result:null;
