@@ -1,0 +1,6 @@
+import {describe,it,expect} from "vitest";
+import {panCamera,zoomCamera,fitCamera,gestureCamera} from "../lib/map-camera";
+import {project} from "../lib/street-geometry";
+import type {Point} from "../lib/geography";
+const center:Point=[35.2459,-13.2999];const camera={center,zoom:13};
+describe("Street map camera",()=>{it("pans content with the drag",()=>{const p=panCamera(camera,100,0);expect(p.center[0]).toBeLessThan(center[0]);expect(p.center[1]).toBeCloseTo(center[1],7);});it("preserves the anchored world point while zooming",()=>{const p=zoomCamera(camera,14,[360,160]);const a=project(center,13),b=project(p.center,14);expect(b[0]+120).toBeCloseTo((a[0]+120)*2,5);});it("fits both endpoints inside the padded viewport",()=>{const points:Point[]=[center,[35.28,-13.32]];const c=fitCamera(points)!;const p=project(c.center,c.zoom);for(const a of points){const q=project(a,c.zoom);expect(Math.abs(q[0]-p[0])).toBeLessThanOrEqual(192.01);expect(Math.abs(q[1]-p[1])).toBeLessThanOrEqual(112.01);}});it("clamps zoom gestures",()=>{expect(gestureCamera({...camera,zoom:18},0,0,2,[240,160]).zoom).toBe(18);expect(gestureCamera(camera,0,0,2,[240,160]).zoom).toBe(14);expect(fitCamera([])).toBeNull();});});
