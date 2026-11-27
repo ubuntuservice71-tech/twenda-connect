@@ -4,6 +4,7 @@ import {driverClient} from "./driver-shared";
 import {AuthPanel} from "./auth-panel";
 import {PassengerPreview} from "./passenger-preview";
 import {PilotRides} from "./pilot-rides";
+import {SupportDesk} from "./support-desk";
 import {House,History,Wallet,UserRound} from "lucide-react";
 type T=Database["public"]["Tables"];
 type Account=T["passenger_accounts"]["Row"];
@@ -18,7 +19,7 @@ export function PassengerArea(){
  {tab==="home"&&(account?.status==="blocked"?<p className="tw-note">Conta bloqueada para futuras operações de viagem. Contacta o suporte.</p>:<PassengerPreview canSubmit={account?.status==="active"} onSubmitted={()=>setTab("trips")}/>)}
  {tab==="trips"&&(uid?<><PilotRides role="passenger"/><Trips rides={rides.filter(r=>!r.pilot)}/></>:<p className="tw-note">Entra na conta para consultar o histórico.</p>)}
  {tab==="wallet"&&<div className="tw-panel"><h2 className="font-bold">Carteira</h2><p className="text-2xl mt-2">— MT</p><p className="text-sm">Carteira de passageiro ainda não activada. Nenhum carregamento ou pagamento disponível.</p></div>}
- {tab==="profile"&&<><AuthPanel/>{uid&&<form className="tw-panel space-y-3" onSubmit={e=>{e.preventDefault();void save();}}><h2 className="font-bold">Perfil de passageiro</h2><label>Nome completo<input className="tw-field" required maxLength={150} value={name} onChange={e=>setName(e.target.value)}/></label><p className="text-sm">E-mail: {account?.email??"Sincronizar ao guardar"}</p><p className="text-sm">Telefone: {account?.phone??"Por confirmar"}</p><p className="text-sm">Estado: {account?.status??"Não registado"}</p><button disabled={busy} className="tw-primary">Guardar perfil e sincronizar contactos</button></form>}</>}
+ {tab==="profile"&&<><AuthPanel/>{uid&&<SupportDesk role="passenger"/>}{uid&&<form className="tw-panel space-y-3" onSubmit={e=>{e.preventDefault();void save();}}><h2 className="font-bold">Perfil de passageiro</h2><label>Nome completo<input className="tw-field" required maxLength={150} value={name} onChange={e=>setName(e.target.value)}/></label><p className="text-sm">E-mail: {account?.email??"Sincronizar ao guardar"}</p><p className="text-sm">Telefone: {account?.phone??"Por confirmar"}</p><p className="text-sm">Estado: {account?.status??"Não registado"}</p><button disabled={busy} className="tw-primary">Guardar perfil e sincronizar contactos</button></form>}</>}
  <nav aria-label="Navegação do passageiro" className="sticky bottom-0 z-20 bg-white border-t grid grid-cols-4 gap-1 p-2">{[{id:"home",label:"Início",Icon:House},{id:"trips",label:"Viagens",Icon:History},{id:"wallet",label:"Carteira",Icon:Wallet},{id:"profile",label:"Perfil",Icon:UserRound}].map(({id,label,Icon})=><button key={id} type="button" aria-current={tab===id?"page":undefined} className={"flex flex-col items-center justify-center gap-1 rounded-lg p-2 text-xs "+(tab===id?"bg-yellow-100 font-bold":"text-neutral-600")} onClick={()=>setTab(id)}><Icon size={20}/>{label}</button>)}</nav></section>;
 }
 export function PassengerAdmin(){

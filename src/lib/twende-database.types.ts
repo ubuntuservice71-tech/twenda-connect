@@ -861,6 +861,97 @@ export type Database = {
           },
         ]
       }
+      support_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          sender_id: string
+          sender_role: string
+          ticket_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          sender_id: string
+          sender_role: string
+          ticket_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+          sender_role?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          created_at: string
+          description: string
+          id: string
+          owner_id: string
+          priority: string
+          requested_minor: number | null
+          ride_id: string | null
+          source: string
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          owner_id: string
+          priority?: string
+          requested_minor?: number | null
+          ride_id?: string | null
+          source: string
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          owner_id?: string
+          priority?: string
+          requested_minor?: number | null
+          ride_id?: string | null
+          source?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           role: string

@@ -8,6 +8,7 @@ import { TrackingAdmin } from "./driver-location";
 import {PilotRides} from "./pilot-rides";
 import {Finance} from "./finance";
 import {PaymentPilot} from "./payment-pilot";
+import {SupportDesk} from "./support-desk";
 import { ArrowLeft, ArrowRight, LayoutDashboard, CalendarDays, MapPin, Map, CreditCard, CarFront, Users, Navigation, Wallet, FileCheck, Gift, MessageSquare, Ticket, Settings, Search, Menu, X, Tag, Clock, ShieldCheck, FileText, Globe, Image, HelpCircle, SlidersHorizontal, KeyRound, RefreshCw } from "lucide-react";
 
 const groups = [
@@ -128,7 +129,7 @@ export function AdminPreview({onBack}: {onBack?: () => void}) {
             <h2 className="text-lg font-bold">Simulação e regras iniciais</h2>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{[["Candidaturas pendentes","—"],["Motoristas aprovados","—"],["Corridas simuladas","1"],["Comissão configurada",saved.commission+"%"]].map(([label,value])=><article key={label} className={panel}><p className="text-sm text-neutral-600">{label}</p><strong className="text-2xl tw-money">{value}</strong></article>)}</div>
           </>}
-          {(tab==="cities"||tab==="zones") ? <LocationAdmin key={tab+locationCity} kind={tab} cityFilter={locationCity} onZones={id=>{setLocationCity(id);setTab("zones");}}/> : (tab==="types"||tab==="settings") ? <PricingAdmin key={tab} kind={tab}/> : (tab==="drivers"||tab==="documents") ? <DriverAdmin key={tab} documentsOnly={tab==="documents"}/> : tab==="customers" ? <PassengerAdmin/> : tab==="tracking" ? <TrackingAdmin/> : tab==="rides" ? <PilotRides role="admin"/> : ["wallet","commissions","transactions","walletTransactions"].includes(tab) ? <Finance key={tab} admin mode={tab}/> : tab==="payments" ? <PaymentPilot admin/> : tab!=="overview" && <AdminModule key={tab} id={tab}/>}
+          {(tab==="cities"||tab==="zones") ? <LocationAdmin key={tab+locationCity} kind={tab} cityFilter={locationCity} onZones={id=>{setLocationCity(id);setTab("zones");}}/> : (tab==="types"||tab==="settings") ? <PricingAdmin key={tab} kind={tab}/> : (tab==="drivers"||tab==="documents") ? <DriverAdmin key={tab} documentsOnly={tab==="documents"}/> : tab==="customers" ? <PassengerAdmin/> : tab==="tracking" ? <TrackingAdmin/> : tab==="rides" ? <PilotRides role="admin"/> : ["wallet","commissions","transactions","walletTransactions"].includes(tab) ? <Finance key={tab} admin mode={tab}/> : tab==="payments" ? <PaymentPilot admin/> : ["tickets","messages","driverTickets","refunds","appeals"].includes(tab) ? <SupportDesk key={tab} role="admin" mode={tab}/> : tab!=="overview" && <AdminModule key={tab} id={tab}/>}
       {tab==="rides" && <article className={panel}><h2 className="text-xl font-bold">Corrida fictícia #001</h2><p>Bairro da Natite → Aeroporto</p><p>Valor: 120,00 MT</p><p>Estado: concluída (exemplo)</p><p>Comissão estimada: {(120*saved.commission/100).toFixed(2)} MT</p></article>}
 
         </main>
