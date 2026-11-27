@@ -1,0 +1,13 @@
+import {render,screen,fireEvent,waitFor,cleanup} from "@testing-library/react";
+import {afterEach,beforeEach,describe,expect,it,vi} from "vitest";
+import {PassengerPreview} from "../components/passenger-preview";
+const {command,reverse,autocomplete}=vi.hoisted(()=>({command:vi.fn(),reverse:vi.fn(),autocomplete:vi.fn()}));
+vi.mock("../components/pilot-rides",()=>({pilotCommand:command}));
+vi.mock("../components/driver-shared",()=>({driverClient:async()=>({auth:{getSession:async()=>({data:{session:{access_token:"test"}}})}})}));
+vi.mock("../lib/street-provider.functions",()=>({autocompleteStreet:autocomplete,reverseStreet:reverse,searchStreet:vi.fn(),calculateStreetRoute:vi.fn(),loadGeoTiles:vi.fn()}));
+beforeEach(()=>{vi.clearAllMocks();command.mockResolvedValue({id:"test"});autocomplete.mockResolvedValue({status:"ok",places:[{label:"Global — resultado simulado, Lichinga",point:[35.25,-13.3]}]});reverse.mockResolvedValue({status:"ok",place:{label:"Nomba — resultado simulado",point:[35.24,-13.29]}});});
+afterEach(()=>{cleanup();vi.unstubAllGlobals();});
+describe("Lichinga smart search",()=>{
+ it("shows suggestions and submits coordinates instead of display labels",async()=>{render(<PassengerPreview canSubmit/>);fireEvent.change(screen.getByPlaceholderText("Usar a minha localização"),{target:{value:"Partida de teste"}});fireEvent.change(screen.getByPlaceholderText("Para onde vais?"),{target:{value:"global"}});fireEvent.click(await screen.findByRole("button",{name:/Global — resultado simulado/},{timeout:3000}));expect(screen.getByPlaceholderText("Para onde vais?")).toHaveValue("Global — resultado simulado, Lichinga");fireEvent.change(screen.getByLabelText("Quanto queres pagar?"),{target:{value:"150"}});fireEvent.click(screen.getByRole("button",{name:/Rever proposta/}));expect(screen.getByText("Global — resultado simulado, Lichinga")).toBeInTheDocument();fireEvent.click(screen.getByRole("button",{name:"Registar pedido-piloto"}));await waitFor(()=>expect(command).toHaveBeenCalledWith(expect.objectContaining({destination:"-13.30000, 35.25000"})));});
+ it("displays reverse-geocoded GPS name rather than coordinates",async()=>{vi.stubGlobal("navigator",Object.assign(Object.create(navigator),{geolocation:{getCurrentPosition:(ok:Function)=>ok({coords:{latitude:-13.29,longitude:35.24}})}}));render(<PassengerPreview/>);fireEvent.click(screen.getByRole("button",{name:"Usar a minha localização"}));await waitFor(()=>expect(screen.getByPlaceholderText("Usar a minha localização")).toHaveValue("Nomba — resultado simulado"));expect(reverse).toHaveBeenCalledWith(expect.objectContaining({data:{point:[35.24,-13.29]}}));});
+});

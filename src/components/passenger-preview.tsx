@@ -55,7 +55,7 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
   const guidance=!origin.trim()||!destination.trim()?"Indica a partida e o destino para continuar.":same?"Escolhe um destino diferente da partida.":!valid?"Indica um preço válido entre 0,01 MT e 10 000 000 MT.":"Confirma os detalhes antes de avançar.";
   const pickDestination=(value:string)=>{destinationRevision.current++;setDestination(value);setDestinationLabel(parseCoordinates(value)?"Local seleccionado no mapa":"");setEditingPlace(null);setSearchField(null);};
   const choosePlace=(field:"origin"|"destination",p:Place)=>{setSearchField(null);setRoad(null);if(field==="origin"){cancelLocation();setOrigin(formatCoordinates(p.point));setOriginLabel(p.label);}else{destinationRevision.current++;setDestination(formatCoordinates(p.point));setDestinationLabel(p.label);}};
-  const mapPick=(field:"origin"|"destination",value:string,label?:string)=>{const point=parseCoordinates(value);if(!point)return;choosePlace(field,{point,label:label||"Local seleccionado no mapa"});};
+  const mapPick=(field:"origin"|"destination",value:string,label?:string)=>{const point=parseCoordinates(value);if(!point)return;choosePlace(field,{point,label:label||"Local seleccionado no mapa"});if(label)return;const rev=field==="origin"?locationRequest.current:destinationRevision.current;void addressForPoint(point).then(name=>{if(!name)return;if(field==="origin"&&rev===locationRequest.current)setOriginLabel(name);if(field==="destination"&&rev===destinationRevision.current)setDestinationLabel(name);}).catch(()=>{});};
   const chooseSaved=(place:SavedPlace)=>{
     if(saved[place]){pickDestination(saved[place]!);return;}
     setPlaceDraft("");setEditingPlace(place);
@@ -76,11 +76,11 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
     },{enableHighAccuracy:false,timeout:10000,maximumAge:0});
   };
   const cancelLocation=()=>{locationRequest.current++;setLocating(false);setLocationNotice("");};
-  const reset=()=>{cancelLocation();setOrigin("");setDestination("");setOriginLabel("");setDestinationLabel("");setSearchField(null);setRoad(null);setReference("");setShowReference(false);setPrice("");setStage("edit");};
+  const reset=()=>{destinationRevision.current++;cancelLocation();setOrigin("");setDestination("");setOriginLabel("");setDestinationLabel("");setSearchField(null);setRoad(null);setReference("");setShowReference(false);setPrice("");setStage("edit");};
   return <section className="tw-rider space-y-5">
     <p className="flex gap-2 items-center text-xs text-neutral-600" role="note"><Info size={16} className="shrink-0" aria-hidden="true"/>Modo piloto — pedidos de teste, sem deslocações ou pagamentos.</p>
     {stage==="edit" ? <>
-      <form id="twende-ride-form" className="space-y-5" onSubmit={e=>{e.preventDefault();if(valid){cancelLocation();setStage("review");}}}>
+      <form id="twende-ride-form" className="space-y-5" onSubmit={e=>{e.preventDefault();if(valid){setSearchField(null);setStage("review");}}}>
         <section className="tw-panel space-y-4" aria-labelledby="route-title">
           <h2 id="route-title" className="text-lg font-bold">O teu percurso</h2>
           <div className="relative border border-neutral-200 rounded-xl bg-white">
