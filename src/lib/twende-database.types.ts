@@ -489,6 +489,84 @@ export type Database = {
         }
         Relationships: []
       }
+      pilot_cancellation_assessments: {
+        Row: {
+          actor_id: string
+          cancellation_id: string
+          created_at: string
+          estimated_minor: number | null
+          free_seconds: number
+          liable_id: string | null
+          no_show_seconds: number
+          outcome: string
+          ride_id: string
+          warning: boolean
+        }
+        Insert: {
+          actor_id: string
+          cancellation_id: string
+          created_at?: string
+          estimated_minor?: number | null
+          free_seconds: number
+          liable_id?: string | null
+          no_show_seconds: number
+          outcome: string
+          ride_id: string
+          warning?: boolean
+        }
+        Update: {
+          actor_id?: string
+          cancellation_id?: string
+          created_at?: string
+          estimated_minor?: number | null
+          free_seconds?: number
+          liable_id?: string | null
+          no_show_seconds?: number
+          outcome?: string
+          ride_id?: string
+          warning?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_cancellation_assessments_cancellation_id_fkey"
+            columns: ["cancellation_id"]
+            isOneToOne: true
+            referencedRelation: "cancellation_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pilot_cancellation_assessments_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: true
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pilot_cancellation_settings: {
+        Row: {
+          absence_fee_minor: number | null
+          arrival_fee_minor: number | null
+          free_seconds: number
+          id: boolean
+          no_show_seconds: number
+        }
+        Insert: {
+          absence_fee_minor?: number | null
+          arrival_fee_minor?: number | null
+          free_seconds: number
+          id?: boolean
+          no_show_seconds: number
+        }
+        Update: {
+          absence_fee_minor?: number | null
+          arrival_fee_minor?: number | null
+          free_seconds?: number
+          id?: boolean
+          no_show_seconds?: number
+        }
+        Relationships: []
+      }
       pilot_dispatch_rounds: {
         Row: {
           created_at: string
