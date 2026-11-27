@@ -1,0 +1,8 @@
+import {isPoint,type Point} from "./geography";
+import type {Place,RoadRoute} from "./street-geometry";
+function obj(x:unknown):Record<string,unknown>|null{return x!==null&&typeof x==="object"&&!Array.isArray(x)?x as Record<string,unknown>:null;}
+export function parseGeoapifyPlaces(input:unknown):Place[]{const r=obj(input)?.["results"];if(!Array.isArray(r))return [];return r.slice(0,8).flatMap(v=>{const p=obj(v);if(!p||p["country_code"]!=="mz"||typeof p["formatted"]!=="string")return [];const point=[p["lon"],p["lat"]];return isPoint(point)&&p["formatted"].trim()?[{label:p["formatted"].slice(0,240),point}]:[];});}
+export function parseGeoapifyRoute(input:unknown):RoadRoute|null{const root=obj(input);if(root?.["type"]!=="FeatureCollection"||!Array.isArray(root["features"]))return null;const f=obj(root["features"][0]);const p=obj(f?.["properties"]),g=obj(f?.["geometry"]);const distance=p?.["distance"],duration=p?.["time"];const lines=g?.["coordinates"];if(typeof distance!=="number"||typeof duration!=="number"||!Number.isFinite(distance)||!Number.isFinite(duration)||distance<=0||duration<=0||g?.["type"]!=="MultiLineString"||!Array.isArray(lines)||lines.length!==1)return null;const points:unknown=lines[0];if(!Array.isArray(points)||points.length<2||points.length>20000||!points.every(isPoint))return null;return {distance,duration,points:points as Point[]};}
+export function geoapifyMode(vehicle:"car"|"motorcycle"){return vehicle==="car"?"drive":"motorcycle";}
+export type TileCoordinate={x:number;y:number};
+export function validTile(z:number,p:TileCoordinate){return Number.isInteger(z)&&z>=3&&z<=18&&Number.isInteger(p.x)&&Number.isInteger(p.y)&&p.x>=0&&p.y>=0&&p.x<2**z&&p.y<2**z;}
