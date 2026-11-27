@@ -1,13 +1,12 @@
 import { useRef, useState } from "react";
 import {pilotCommand} from "./pilot-rides";
 import {CitySearch} from "./city-search";
-import {CoordinatePanel} from "./coordinate-panel";
 import {StreetPlanner} from "./street-planner";
 import type {RoadRoute} from "../lib/street-geometry";
 import {parseCoordinates,distanceKm,formatCoordinates,type Point} from "../lib/geography";
 import {PlaceSuggestions,addressForPoint} from "./place-suggestions";
 import type {Place} from "../lib/street-geometry";
-import { ArrowRight, ArrowLeft, CarFront, Check, MapPin, LocateFixed, House, BriefcaseBusiness, Plane, Clock, Plus, Route, Info } from "lucide-react";
+import { ArrowRight, ArrowLeft, CarFront, Check, MapPin, LocateFixed, House, BriefcaseBusiness, Plane, Clock, Plus, Route, Info, ChevronDown, ChevronUp } from "lucide-react";
 
 type Vehicle = "car" | "bike";
 type SavedPlace = "Casa" | "Trabalho";
@@ -23,7 +22,7 @@ function MotorcycleIcon() {
 const money = (value:number) => value.toLocaleString("pt-PT",{minimumFractionDigits:2,maximumFractionDigits:2})+" MT";
 const parsePrice = (value:string) => /^\d+(?:[.,]\d{1,2})?$/.test(value.trim()) ? Number(value.trim().replace(",",".")) : NaN;
 
-export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boolean;onSubmitted?:()=>void}) {
+export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boolean;onSubmitted?:(rideId?:string)=>void}) {
  const [submitting,setSubmitting]=useState(false),[submitError,setSubmitError]=useState("");
   const [origin,setOrigin]=useState("");
   const [destination,setDestination]=useState("");
@@ -35,6 +34,7 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
   const [vehicle,setVehicle]=useState<Vehicle>("car");
   const [price,setPrice]=useState("");
   const [stage,setStage]=useState<Stage>("edit");
+  const [sheetOpen,setSheetOpen]=useState(true);
   const [locating,setLocating]=useState(false);
   const [locationNotice,setLocationNotice]=useState("");
   const [saved,setSaved]=useState<Partial<Record<SavedPlace,string>>>({});
@@ -76,12 +76,15 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
     },{enableHighAccuracy:false,timeout:10000,maximumAge:0});
   };
   const cancelLocation=()=>{locationRequest.current++;setLocating(false);setLocationNotice("");};
-  const reset=()=>{destinationRevision.current++;cancelLocation();setOrigin("");setDestination("");setOriginLabel("");setDestinationLabel("");setSearchField(null);setRoad(null);setReference("");setShowReference(false);setPrice("");setStage("edit");};
-  return <section className="tw-rider space-y-5">
+  const reset=()=>{destinationRevision.current++;cancelLocation();setOrigin("");setDestination("");setOriginLabel("");setDestinationLabel("");setSearchField(null);setRoad(null);setReference("");setShowReference(false);setPrice("");setSheetOpen(true);setStage("edit");};
+  return <section className="tw-rider tw-journey">
     <p className="flex gap-2 items-center text-xs text-neutral-600" role="note"><Info size={16} className="shrink-0" aria-hidden="true"/>Modo piloto — pedidos de teste, sem deslocações ou pagamentos.</p>
+    <div className="tw-journey-map" aria-label="Mapa principal da viagem"><StreetPlanner compact readOnly={stage!=="edit"} origin={origin} destination={destination} vehicle={vehicle==="car"?"car":"motorcycle"} onOrigin={(v,label)=>mapPick("origin",v,label)} onDestination={(v,label)=>mapPick("destination",v,label)} onRoute={v=>setRoad(v?{key:routeKey,value:v}:null)} route={currentRoad}/></div>
+    <div className="tw-journey-sheet"><button type="button" className="tw-sheet-handle" aria-expanded={sheetOpen} aria-controls="tw-journey-details" onClick={()=>setSheetOpen(v=>!v)}><span className="tw-sheet-grip" aria-hidden="true"/><span>{stage==="edit"?"Para onde vamos?":stage==="review"?"Confirma a tua viagem":"Pedido registado"}</span>{sheetOpen?<ChevronDown size={18}/>:<ChevronUp size={18}/>}</button>
+    <div id="tw-journey-details" hidden={!sheetOpen} className="tw-journey-details">
     {stage==="edit" ? <>
-      <form id="twende-ride-form" className="space-y-5" onSubmit={e=>{e.preventDefault();if(valid){setSearchField(null);setStage("review");}}}>
-        <section className="tw-panel space-y-4" aria-labelledby="route-title">
+      <form id="twende-ride-form" className="space-y-4" onSubmit={e=>{e.preventDefault();if(valid){setSearchField(null);setSheetOpen(true);setStage("review");}}}>
+        <section className="tw-sheet-section space-y-3" aria-labelledby="route-title">
           <h2 id="route-title" className="text-lg font-bold">O teu percurso</h2>
           <div className="relative border border-neutral-200 rounded-xl bg-white">
             <div aria-hidden="true" className="absolute left-[26px] top-[39px] bottom-[39px] border-l border-dashed border-neutral-400"/>
@@ -105,7 +108,7 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
           </div>
           {locationNotice&&<p role="status" className="text-xs text-neutral-600">{locationNotice}</p>}
           {showReference&&<label className="block text-sm font-medium">Referência da partida (opcional)<input className="tw-field" maxLength={160} value={reference} placeholder="Ex.: Em frente à escola" onChange={e=>setReference(e.target.value)}/></label>}
-          <details className="border-t border-neutral-100 pt-3"><summary className="cursor-pointer text-sm font-semibold">Mapa e pesquisa de endereços</summary><StreetPlanner origin={origin} destination={destination} vehicle={vehicle==="car"?"car":"motorcycle"} onOrigin={(v,label)=>mapPick("origin",v,label)} onDestination={(v,label)=>mapPick("destination",v,label)} onRoute={v=>setRoad(v?{key:routeKey,value:v}:null)} route={currentRoad}/></details><details className="border-t border-neutral-100 pt-3"><summary className="cursor-pointer text-sm font-semibold">Pesquisar cidade</summary><CitySearch onSelect={pickDestination}/></details><div className="border-t border-neutral-100 pt-3">
+          <details className="border-t border-neutral-100 pt-3"><summary className="cursor-pointer text-sm font-semibold">Pesquisar cidade</summary><CitySearch onSelect={pickDestination}/></details><div className="border-t border-neutral-100 pt-3">
             <p className="text-xs font-semibold text-neutral-600 mb-2">Destinos rápidos</p>
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={()=>chooseSaved("Casa")} className="tw-rider-chip"><House size={16} aria-hidden="true"/>Casa</button>
@@ -121,22 +124,22 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
           </div>
         </section>
         <fieldset className="space-y-3"><legend className="text-lg font-bold">Escolhe o veículo</legend>
-          <div className="grid grid-cols-2 gap-3">
-            {([{id:"car",label:"Carro",detail:"Viagem de carro"},{id:"bike",label:"Motociclo",detail:"1 passageiro"}] as const).map(item=><button type="button" key={item.id} aria-pressed={vehicle===item.id} onClick={()=>setVehicle(item.id)} className="tw-choice relative rounded-xl bg-white border border-neutral-200 p-4 text-left flex flex-col items-start gap-2">
+          <div className="grid gap-2">
+            {([{id:"car",label:"Carro",detail:"Viagem de carro"},{id:"bike",label:"Motociclo",detail:"1 passageiro"}] as const).map(item=><button type="button" key={item.id} aria-pressed={vehicle===item.id} onClick={()=>setVehicle(item.id)} className="tw-choice relative rounded-xl bg-white border border-neutral-200 p-3 text-left flex items-center gap-4">
               {vehicle===item.id&&<span className="absolute right-3 top-3 w-5 h-5 rounded-full bg-neutral-900 text-white flex items-center justify-center"><Check size={13} aria-hidden="true"/></span>}
               {item.id==="car"?<CarFront size={38} strokeWidth={1.8} aria-hidden="true"/>:<MotorcycleIcon/>}
-              <span className="font-bold">{item.label}</span><span className="text-xs text-neutral-600">{item.detail}</span>
+              <span className="flex-1 min-w-0 pr-7"><span className="block font-bold">{item.label}</span><span className="block text-xs text-neutral-600">{item.detail}</span></span><span className="text-xs text-neutral-500 pr-6">{vehicle===item.id&&Number.isFinite(amount)&&amount>0?money(amount):"Negociável"}</span>
             </button>)}
           </div>
         </fieldset>
-        <section className="tw-panel space-y-3" aria-labelledby="estimate-title">
+        <section className="tw-sheet-section space-y-3" aria-labelledby="estimate-title">
           <h2 id="estimate-title" className="font-bold flex items-center gap-2"><Route size={19} aria-hidden="true"/>Estimativa da viagem</h2>
           <div className="grid grid-cols-3 gap-2 text-center">
             {[currentRoad?"Distância rodoviária":"Distância em linha recta","Tempo estimado","Preço sugerido"].map((label,i)=><div key={label} className="rounded-lg bg-neutral-50 p-2"><span className="block text-xs text-neutral-600">{label}</span><strong className="block text-lg">{i===0&&currentRoad?(currentRoad.distance/1000).toFixed(2)+" km":i===1&&currentRoad?Math.ceil(currentRoad.duration/60)+" min":i===0&&straight!==null?straight.toFixed(2)+" km":"—"}</strong></div>)}
           </div>
-          {startPoint&&endPoint&&<CoordinatePanel center={startPoint} connect markers={[{id:"start",point:startPoint,label:"Partida"},{id:"end",point:endPoint,label:"Destino"}]}/>}<p className="text-xs text-neutral-600">{hasRoute?"Calcula a rota no mapa. A sugestão de preço depende de tarifários activos; podes propor o teu preço.":"Indica a partida e o destino. As estimativas dependem dos dados de rota e tarifário."}</p>
+          <p className="text-xs text-neutral-600">{hasRoute?"Calcula a rota no mapa. A sugestão de preço depende de tarifários activos; podes propor o teu preço.":"Indica a partida e o destino. As estimativas dependem dos dados de rota e tarifário."}</p>
         </section>
-        <section className="tw-panel space-y-2">
+        <section className="tw-sheet-section space-y-2">
           <label htmlFor="ride-price" className="block text-lg font-bold">Quanto queres pagar?</label>
           <p className="text-sm text-neutral-600">O motorista poderá aceitar ou negociar a tua proposta.</p>
           <div className="relative"><input id="ride-price" className="tw-field !pr-14 !text-xl font-semibold" type="text" inputMode="decimal" autoComplete="off" required maxLength={14} value={price} onChange={e=>setPrice(e.target.value)} placeholder="Introduz o valor"/><span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold pointer-events-none">MT</span></div>
@@ -148,7 +151,7 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
         <button type="submit" form="twende-ride-form" disabled={!valid} className="tw-rider-cta w-full flex items-center justify-center gap-2">Rever proposta <ArrowRight size={19} aria-hidden="true"/></button>
       </div>
     </>:stage==="review"?<>
-      <section className="tw-panel space-y-4">
+      <section className="tw-sheet-section space-y-4">
         <h2 className="text-xl font-bold">Rever proposta</h2>
         <div className="rounded-xl border border-neutral-200 p-4 space-y-3">
           <div className="flex items-start gap-3"><span className="mt-1.5 w-3 h-3 shrink-0 border-[3px] border-neutral-900 rounded-full"/><div className="min-w-0"><p className="text-xs text-neutral-600">Partida</p><p className="font-semibold break-words">{originLabel||origin}</p>{reference.trim()&&<p className="text-xs text-neutral-600 break-words">{reference}</p>}</div></div>
@@ -160,10 +163,11 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
         <p className="text-sm text-neutral-600">O pedido-piloto será guardado e poderá receber propostas de teste. Não haverá deslocações nem cobranças.</p>
         <button type="button" className="tw-secondary w-full flex items-center justify-center gap-2" onClick={()=>setStage("edit")}><ArrowLeft size={17} aria-hidden="true"/>Editar proposta</button>
       </section>
-      <div className="tw-rider-action">{submitError&&<p role="alert" className="text-sm text-red-700">{submitError}</p>}{!canSubmit&&<p className="text-sm">Entra e guarda o perfil para criar um pedido-piloto.</p>}<button type="button" className="tw-rider-cta w-full" disabled={!canSubmit||submitting} onClick={async()=>{setSubmitting(true);setSubmitError("");try{await pilotCommand({action:"request",origin:origin.trim(),destination:destination.trim(),vehicle_kind:vehicle==="car"?"car":"motorcycle",price_minor:Math.round(amount*100),pickup_reference:reference.trim()||null});setRecent(prev=>[{value:destination.trim(),label:destinationLabel||destination.trim()},...prev.filter(p=>p.value!==destination.trim())].slice(0,5));setStage("confirmed");onSubmitted?.();}catch{setSubmitError("Pedido recusado. Confirma o perfil e se já existe um pedido aberto.");}finally{setSubmitting(false);}}}>Registar pedido-piloto</button></div>
+      <div className="tw-rider-action">{submitError&&<p role="alert" className="text-sm text-red-700">{submitError}</p>}{!canSubmit&&<p className="text-sm">Entra e guarda o perfil para criar um pedido-piloto.</p>}<button type="button" className="tw-rider-cta w-full" disabled={!canSubmit||submitting} onClick={async()=>{setSubmitting(true);setSubmitError("");try{const result=await pilotCommand({action:"request",origin:origin.trim(),destination:destination.trim(),vehicle_kind:vehicle==="car"?"car":"motorcycle",price_minor:Math.round(amount*100),pickup_reference:reference.trim()||null});setRecent(prev=>[{value:destination.trim(),label:destinationLabel||destination.trim()},...prev.filter(p=>p.value!==destination.trim())].slice(0,5));setStage("confirmed");onSubmitted?.(result.ride_id??undefined);}catch{setSubmitError("Pedido recusado. Confirma o perfil e se já existe um pedido aberto.");}finally{setSubmitting(false);}}}>Registar pedido-piloto</button></div>
     </>:<section className="tw-panel text-center space-y-4" aria-live="polite">
       <span className="mx-auto flex w-14 h-14 rounded-full bg-yellow-100 items-center justify-center"><Check size={28} aria-hidden="true"/></span>
       <h2 className="text-xl font-bold">Pedido-piloto registado</h2><p className="text-sm text-neutral-600">A proposta foi guardada para teste. Não houve viagem nem cobrança.</p><button type="button" className="tw-rider-cta w-full" onClick={reset}>Planear outra viagem</button>
     </section>}
+    </div></div>
   </section>;
 }

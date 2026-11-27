@@ -28,13 +28,13 @@ function Index() {
           <button type="button" className="tw-secondary flex items-center gap-2 text-sm" onClick={() => setShowAuth(v => !v)}><UserRound size={18} aria-hidden="true"/>{showAuth ? "Fechar conta" : "Minha conta"}</button>
         </div>
       </header>
-      <section className={`w-full mx-auto flex-1 px-4 sm:px-8 py-6 sm:py-10 ${role==="passenger"&&!showAuth?"max-w-2xl":"max-w-xl"}`}>
+      <section className={`w-full mx-auto flex-1 px-4 sm:px-8 ${role==="passenger"&&!showAuth?"max-w-5xl py-2 sm:py-4":"max-w-xl py-6 sm:py-10"}`}>
         {(app || showAuth) && <button type="button" onClick={back} className="flex items-center gap-2 font-semibold mb-4"><ArrowLeft size={20} aria-hidden="true"/>Voltar</button>}
-        <div className="mb-6">
+        {!(role==="passenger"&&!showAuth)&&<div className="mb-6">
           <span className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-600"><span className="h-2 w-2 rounded-full bg-yellow-400" aria-hidden="true"/>{showAuth ? "Conta" : app?.name || "Moçambique"} · Pré-visualização</span>
           <h1 className="text-[clamp(2rem,5vw,3rem)] leading-tight font-bold mt-3 mb-2">{showAuth ? "Minha conta" : app?.title || "Vamos juntos."}</h1>
           <p className="text-neutral-600">{showAuth ? "Gerir o acesso à plataforma." : app?.description || "Escolhe como queres utilizar a TWENDE."}</p>
-        </div>
+        </div>}
         {showAuth ? <AuthPanel /> : app ? (
           <SessionBoundary>{role === "passenger" ? <PassengerArea /> : <DriverPreview />}</SessionBoundary>
         ) : (
