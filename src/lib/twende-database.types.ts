@@ -267,6 +267,30 @@ export type Database = {
         }
         Relationships: []
       }
+      configuration_drafts: {
+        Row: {
+          id: string
+          module: string
+          payload: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          module: string
+          payload: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          module?: string
+          payload?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       driver_applications: {
         Row: {
           created_at: string
