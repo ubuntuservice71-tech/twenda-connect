@@ -489,6 +489,64 @@ export type Database = {
         }
         Relationships: []
       }
+      pilot_dispatch_rounds: {
+        Row: {
+          created_at: string
+          invited_count: number
+          radius_km: number
+          ride_id: string
+          round_no: number
+        }
+        Insert: {
+          created_at?: string
+          invited_count: number
+          radius_km: number
+          ride_id: string
+          round_no: number
+        }
+        Update: {
+          created_at?: string
+          invited_count?: number
+          radius_km?: number
+          ride_id?: string
+          round_no?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_dispatch_rounds_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pilot_driver_availability: {
+        Row: {
+          available_until: string
+          driver_id: string
+          updated_at: string
+        }
+        Insert: {
+          available_until: string
+          driver_id: string
+          updated_at?: string
+        }
+        Update: {
+          available_until?: string
+          driver_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_driver_availability_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "driver_applications"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       pilot_notifications: {
         Row: {
           created_at: string
@@ -897,16 +955,19 @@ export type Database = {
         Row: {
           created_at: string
           driver_id: string
+          expires_at: string | null
           ride_id: string
         }
         Insert: {
           created_at?: string
           driver_id: string
+          expires_at?: string | null
           ride_id: string
         }
         Update: {
           created_at?: string
           driver_id?: string
+          expires_at?: string | null
           ride_id?: string
         }
         Relationships: [
