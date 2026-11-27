@@ -281,6 +281,47 @@ export type Database = {
           },
         ]
       }
+      passenger_accounts: {
+        Row: {
+          contact_synced_at: string
+          created_at: string
+          email: string | null
+          email_verified: boolean
+          phone: string | null
+          phone_verified: boolean
+          status: string
+          user_id: string
+        }
+        Insert: {
+          contact_synced_at?: string
+          created_at?: string
+          email?: string | null
+          email_verified?: boolean
+          phone?: string | null
+          phone_verified?: boolean
+          status?: string
+          user_id: string
+        }
+        Update: {
+          contact_synced_at?: string
+          created_at?: string
+          email?: string | null
+          email_verified?: boolean
+          phone?: string | null
+          phone_verified?: boolean
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passenger_accounts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       platform_settings: {
         Row: {
           absence_fee_minor: number | null

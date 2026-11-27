@@ -3,6 +3,7 @@ import { AdminModule } from "./admin-module";
 import { LocationAdmin } from "./location-admin";
 import { PricingAdmin } from "./pricing-admin";
 import { DriverAdmin } from "./driver-admin";
+import { PassengerAdmin } from "./passenger-area";
 import { ArrowLeft, ArrowRight, LayoutDashboard, CalendarDays, MapPin, Map, CreditCard, CarFront, Users, Navigation, Wallet, FileCheck, Gift, MessageSquare, Ticket, Settings, Search, Menu, X, Tag, Clock, ShieldCheck, FileText, Globe, Image, HelpCircle, SlidersHorizontal, KeyRound, RefreshCw } from "lucide-react";
 
 const groups = [
@@ -99,7 +100,7 @@ export function AdminPreview({onBack}: {onBack?: () => void}) {
         </aside>
         <main className="min-w-0 p-4 sm:p-5 lg:p-7 space-y-4 max-w-[1600px] w-full">
           <div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-xs font-semibold text-neutral-500">Administração / {selected?.label}</p><h1 className="text-2xl font-bold mt-1">{selected?.label}</h1></div><span className="rounded-full bg-yellow-100 px-3 py-1.5 text-xs font-semibold">Ambiente de demonstração</span></div>
-          <p className="tw-note">Pré-visualização pública, sem acesso a dados reais ou privilégios administrativos. Os indicadores não ligados à base de dados aparecem como “—”.</p>
+          <p className="tw-note">Painel com módulos reais e demonstrativos. Os indicadores ainda não ligados aparecem como “—”.</p>
           {tab==="overview" && <>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {metrics.map((m,i)=><DashboardCard key={m.label} label={m.label} help={m.help} tone={[8,15].includes(i)?"red":[2,5,6,14].includes(i)?"amber":[0,3,7,9,13].includes(i)?"green":"blue"} onClick={()=>changeTab(m.module)}/>)}
@@ -123,7 +124,7 @@ export function AdminPreview({onBack}: {onBack?: () => void}) {
             <h2 className="text-lg font-bold">Simulação e regras iniciais</h2>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{[["Candidaturas pendentes","—"],["Motoristas aprovados","—"],["Corridas simuladas","1"],["Comissão configurada",saved.commission+"%"]].map(([label,value])=><article key={label} className={panel}><p className="text-sm text-neutral-600">{label}</p><strong className="text-2xl tw-money">{value}</strong></article>)}</div>
           </>}
-          {(tab==="cities"||tab==="zones") ? <LocationAdmin key={tab+locationCity} kind={tab} cityFilter={locationCity} onZones={id=>{setLocationCity(id);setTab("zones");}}/> : (tab==="types"||tab==="settings") ? <PricingAdmin key={tab} kind={tab}/> : (tab==="drivers"||tab==="documents") ? <DriverAdmin key={tab} documentsOnly={tab==="documents"}/> : tab!=="overview" && <AdminModule key={tab} id={tab}/>}
+          {(tab==="cities"||tab==="zones") ? <LocationAdmin key={tab+locationCity} kind={tab} cityFilter={locationCity} onZones={id=>{setLocationCity(id);setTab("zones");}}/> : (tab==="types"||tab==="settings") ? <PricingAdmin key={tab} kind={tab}/> : (tab==="drivers"||tab==="documents") ? <DriverAdmin key={tab} documentsOnly={tab==="documents"}/> : tab==="customers" ? <PassengerAdmin/> : tab!=="overview" && <AdminModule key={tab} id={tab}/>}
       {tab==="rides" && <article className={panel}><h2 className="text-xl font-bold">Corrida fictícia #001</h2><p>Bairro da Natite → Aeroporto</p><p>Valor: 120,00 MT</p><p>Estado: concluída (exemplo)</p><p>Comissão estimada: {(120*saved.commission/100).toFixed(2)} MT</p></article>}
       {tab==="wallet" && <article className={panel}><h2 className="text-xl font-bold">Carteira pré-paga demonstrativa</h2><p>Motorista fictício</p><strong className="text-3xl tw-money">500,00 MT</strong><p>Comissão configurada: {saved.commission}%</p><p className="text-sm">Nenhuma operação financeira real disponível.</p></article>}
 
