@@ -2,6 +2,8 @@ import { useRef, useState } from "react";
 import {pilotCommand} from "./pilot-rides";
 import {CitySearch} from "./city-search";
 import {CoordinatePanel} from "./coordinate-panel";
+import {StreetPlanner} from "./street-planner";
+import type {RoadRoute} from "../lib/street-geometry";
 import {parseCoordinates,distanceKm} from "../lib/geography";
 import { ArrowRight, ArrowLeft, CarFront, Check, MapPin, LocateFixed, House, BriefcaseBusiness, Plane, Clock, Plus, Route, Info } from "lucide-react";
 
@@ -36,6 +38,9 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
   const [recent,setRecent]=useState<string[]>([]);
   const locationRequest=useRef(0);
   const destinationInput=useRef<HTMLInputElement>(null);
+  const [road,setRoad]=useState<{key:string;value:RoadRoute}|null>(null);
+  const routeKey=JSON.stringify([origin,destination,vehicle]);
+  const currentRoad=road?.key===routeKey?road.value:null;
   const amount=parsePrice(price);
   const startPoint=parseCoordinates(origin),endPoint=parseCoordinates(destination);
   const straight=startPoint&&endPoint?distanceKm(startPoint,endPoint):null;
@@ -90,7 +95,7 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
           </div>
           {locationNotice&&<p role="status" className="text-xs text-neutral-600">{locationNotice}</p>}
           {showReference&&<label className="block text-sm font-medium">Referência da partida (opcional)<input className="tw-field" maxLength={160} value={reference} placeholder="Ex.: Em frente à escola" onChange={e=>setReference(e.target.value)}/></label>}
-          <details className="border-t border-neutral-100 pt-3"><summary className="cursor-pointer text-sm font-semibold">Pesquisar cidade</summary><CitySearch onSelect={pickDestination}/></details><div className="border-t border-neutral-100 pt-3">
+          <details className="border-t border-neutral-100 pt-3"><summary className="cursor-pointer text-sm font-semibold">Mapa e pesquisa de endereços</summary><StreetPlanner origin={origin} destination={destination} vehicle={vehicle==="car"?"car":"motorcycle"} onOrigin={v=>{cancelLocation();setOrigin(v);setRoad(null);}} onDestination={v=>{setDestination(v);setRoad(null);}} onRoute={v=>setRoad(v?{key:routeKey,value:v}:null)} route={currentRoad}/></details><details className="border-t border-neutral-100 pt-3"><summary className="cursor-pointer text-sm font-semibold">Pesquisar cidade</summary><CitySearch onSelect={pickDestination}/></details><div className="border-t border-neutral-100 pt-3">
             <p className="text-xs font-semibold text-neutral-600 mb-2">Destinos rápidos</p>
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={()=>chooseSaved("Casa")} className="tw-rider-chip"><House size={16} aria-hidden="true"/>Casa</button>
@@ -117,9 +122,9 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
         <section className="tw-panel space-y-3" aria-labelledby="estimate-title">
           <h2 id="estimate-title" className="font-bold flex items-center gap-2"><Route size={19} aria-hidden="true"/>Estimativa da viagem</h2>
           <div className="grid grid-cols-3 gap-2 text-center">
-            {["Distância em linha recta","Tempo","Preço sugerido"].map((label,i)=><div key={label} className="rounded-lg bg-neutral-50 p-2"><span className="block text-xs text-neutral-600">{label}</span><strong className="block text-lg">{i===0&&straight!==null?straight.toFixed(2)+" km":"—"}</strong></div>)}
+            {[currentRoad?"Distância rodoviária":"Distância em linha recta","Tempo estimado","Preço sugerido"].map((label,i)=><div key={label} className="rounded-lg bg-neutral-50 p-2"><span className="block text-xs text-neutral-600">{label}</span><strong className="block text-lg">{i===0&&currentRoad?(currentRoad.distance/1000).toFixed(2)+" km":i===1&&currentRoad?Math.ceil(currentRoad.duration/60)+" min":i===0&&straight!==null?straight.toFixed(2)+" km":"—"}</strong></div>)}
           </div>
-          {startPoint&&endPoint&&<CoordinatePanel center={startPoint} connect markers={[{id:"start",point:startPoint,label:"Partida"},{id:"end",point:endPoint,label:"Destino"}]}/>}<p className="text-xs text-neutral-600">{hasRoute?"Estimativas indisponíveis até à integração de rotas e tarifários. Podes propor o teu preço.":"Indica a partida e o destino. As estimativas dependem dos dados de rota e tarifário."}</p>
+          {startPoint&&endPoint&&<CoordinatePanel center={startPoint} connect markers={[{id:"start",point:startPoint,label:"Partida"},{id:"end",point:endPoint,label:"Destino"}]}/>}<p className="text-xs text-neutral-600">{hasRoute?"Calcula a rota no mapa. A sugestão de preço depende de tarifários activos; podes propor o teu preço.":"Indica a partida e o destino. As estimativas dependem dos dados de rota e tarifário."}</p>
         </section>
         <section className="tw-panel space-y-2">
           <label htmlFor="ride-price" className="block text-lg font-bold">Quanto queres pagar?</label>
