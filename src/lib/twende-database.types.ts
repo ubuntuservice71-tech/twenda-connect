@@ -216,16 +216,28 @@ export type Database = {
       driver_applications: {
         Row: {
           created_at: string
+          date_of_birth: string | null
+          phone: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           status: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          date_of_birth?: string | null
+          phone?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          date_of_birth?: string | null
+          phone?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           user_id?: string
         }
@@ -236,6 +248,8 @@ export type Database = {
           driver_id: string
           id: string
           kind: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           status: string
           storage_path: string | null
         }
@@ -243,6 +257,8 @@ export type Database = {
           driver_id: string
           id?: string
           kind: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           storage_path?: string | null
         }
@@ -250,6 +266,8 @@ export type Database = {
           driver_id?: string
           id?: string
           kind?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           storage_path?: string | null
         }
@@ -510,25 +528,37 @@ export type Database = {
           driver_id: string
           id: string
           kind: string
+          make: string | null
+          model: string | null
           plate: string
+          registration_status: string | null
+          registration_year: number | null
         }
         Insert: {
           driver_id: string
           id?: string
           kind: string
+          make?: string | null
+          model?: string | null
           plate: string
+          registration_status?: string | null
+          registration_year?: number | null
         }
         Update: {
           driver_id?: string
           id?: string
           kind?: string
+          make?: string | null
+          model?: string | null
           plate?: string
+          registration_status?: string | null
+          registration_year?: number | null
         }
         Relationships: [
           {
             foreignKeyName: "vehicles_driver_id_fkey"
             columns: ["driver_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "driver_applications"
             referencedColumns: ["user_id"]
           },
