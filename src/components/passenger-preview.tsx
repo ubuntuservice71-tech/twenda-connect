@@ -4,7 +4,9 @@ import {CitySearch} from "./city-search";
 import {CoordinatePanel} from "./coordinate-panel";
 import {StreetPlanner} from "./street-planner";
 import type {RoadRoute} from "../lib/street-geometry";
-import {parseCoordinates,distanceKm} from "../lib/geography";
+import {parseCoordinates,distanceKm,formatCoordinates,type Point} from "../lib/geography";
+import {PlaceSuggestions,addressForPoint} from "./place-suggestions";
+import type {Place} from "../lib/street-geometry";
 import { ArrowRight, ArrowLeft, CarFront, Check, MapPin, LocateFixed, House, BriefcaseBusiness, Plane, Clock, Plus, Route, Info } from "lucide-react";
 
 type Vehicle = "car" | "bike";
@@ -25,6 +27,9 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
  const [submitting,setSubmitting]=useState(false),[submitError,setSubmitError]=useState("");
   const [origin,setOrigin]=useState("");
   const [destination,setDestination]=useState("");
+  const [originLabel,setOriginLabel]=useState(""),[destinationLabel,setDestinationLabel]=useState("");
+  const [searchField,setSearchField]=useState<"origin"|"destination"|null>(null);
+  const destinationRevision=useRef(0);
   const [reference,setReference]=useState("");
   const [showReference,setShowReference]=useState(false);
   const [vehicle,setVehicle]=useState<Vehicle>("car");
@@ -35,7 +40,7 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
   const [saved,setSaved]=useState<Partial<Record<SavedPlace,string>>>({});
   const [editingPlace,setEditingPlace]=useState<SavedPlace|null>(null);
   const [placeDraft,setPlaceDraft]=useState("");
-  const [recent,setRecent]=useState<string[]>([]);
+  const [recent,setRecent]=useState<{value:string;label:string}[]>([]);
   const locationRequest=useRef(0);
   const destinationInput=useRef<HTMLInputElement>(null);
   const [road,setRoad]=useState<{key:string;value:RoadRoute}|null>(null);
@@ -46,9 +51,11 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
   const straight=startPoint&&endPoint?distanceKm(startPoint,endPoint):null;
   const same=origin.trim().toLocaleLowerCase()===destination.trim().toLocaleLowerCase();
   const hasRoute=Boolean(origin.trim()&&destination.trim()&&!same);
-  const valid=hasRoute&&Number.isFinite(amount)&&amount>0&&Number.isSafeInteger(Math.round(amount*100))&&Math.round(amount*100)<=1000000000;
+  const valid=!locating&&hasRoute&&Number.isFinite(amount)&&amount>0&&Number.isSafeInteger(Math.round(amount*100))&&Math.round(amount*100)<=1000000000;
   const guidance=!origin.trim()||!destination.trim()?"Indica a partida e o destino para continuar.":same?"Escolhe um destino diferente da partida.":!valid?"Indica um preço válido entre 0,01 MT e 10 000 000 MT.":"Confirma os detalhes antes de avançar.";
-  const pickDestination=(value:string)=>{setDestination(value);setEditingPlace(null);};
+  const pickDestination=(value:string)=>{destinationRevision.current++;setDestination(value);setDestinationLabel(parseCoordinates(value)?"Local seleccionado no mapa":"");setEditingPlace(null);setSearchField(null);};
+  const choosePlace=(field:"origin"|"destination",p:Place)=>{setSearchField(null);setRoad(null);if(field==="origin"){cancelLocation();setOrigin(formatCoordinates(p.point));setOriginLabel(p.label);}else{destinationRevision.current++;setDestination(formatCoordinates(p.point));setDestinationLabel(p.label);}};
+  const mapPick=(field:"origin"|"destination",value:string,label?:string)=>{const point=parseCoordinates(value);if(!point)return;choosePlace(field,{point,label:label||"Local seleccionado no mapa"});};
   const chooseSaved=(place:SavedPlace)=>{
     if(saved[place]){pickDestination(saved[place]!);return;}
     setPlaceDraft("");setEditingPlace(place);
@@ -60,16 +67,16 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
     navigator.geolocation.getCurrentPosition(pos=>{
       if(request!==locationRequest.current)return;
       const {latitude,longitude}=pos.coords;
-      setOrigin(latitude.toFixed(5)+", "+longitude.toFixed(5));
-      setLocating(false);
-      setLocationNotice("Coordenadas obtidas. Adiciona uma referência se necessário; o endereço ainda não foi confirmado.");
+      const point:Point=[longitude,latitude];
+      setOrigin(formatCoordinates(point));setOriginLabel("A identificar o teu local…");setSearchField(null);setRoad(null);
+      void addressForPoint(point).then(label=>{if(request!==locationRequest.current)return;setOriginLabel(label||"Minha localização");setLocationNotice(label?"Local aproximado identificado pelo GPS. Confirma a partida.":"GPS obtido. Nome do local indisponível; adiciona uma referência.");}).catch(()=>{if(request===locationRequest.current){setOriginLabel("Minha localização");setLocationNotice("GPS obtido. Não foi possível identificar o nome; adiciona uma referência.");}}).finally(()=>{if(request===locationRequest.current)setLocating(false);});
     },()=>{
       if(request!==locationRequest.current)return;
       setLocating(false);setLocationNotice("Não foi possível obter a localização. Verifica a permissão ou escreve a partida.");
     },{enableHighAccuracy:false,timeout:10000,maximumAge:0});
   };
   const cancelLocation=()=>{locationRequest.current++;setLocating(false);setLocationNotice("");};
-  const reset=()=>{cancelLocation();setOrigin("");setDestination("");setReference("");setShowReference(false);setPrice("");setStage("edit");};
+  const reset=()=>{cancelLocation();setOrigin("");setDestination("");setOriginLabel("");setDestinationLabel("");setSearchField(null);setRoad(null);setReference("");setShowReference(false);setPrice("");setStage("edit");};
   return <section className="tw-rider space-y-5">
     <p className="flex gap-2 items-center text-xs text-neutral-600" role="note"><Info size={16} className="shrink-0" aria-hidden="true"/>Modo piloto — pedidos de teste, sem deslocações ou pagamentos.</p>
     {stage==="edit" ? <>
@@ -81,21 +88,24 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
             <label className="relative flex items-center gap-3 px-4 py-2">
               <span className="w-5 flex shrink-0 justify-center"><span className="w-3 h-3 border-[3px] border-neutral-900 rounded-full bg-white"/></span>
               <span className="flex-1 min-w-0"><span className="text-xs font-semibold text-neutral-600">Partida</span>
-              <input className="tw-rider-route-input" required maxLength={160} value={origin} placeholder="Usar a minha localização" onChange={e=>{cancelLocation();setOrigin(e.target.value);}}/></span>
+              <input className="tw-rider-route-input" required maxLength={160} value={originLabel||origin} placeholder="Usar a minha localização" autoComplete="off" onFocus={()=>setSearchField("origin")} onChange={e=>{cancelLocation();setOriginLabel("");setOrigin(e.target.value);setRoad(null);setSearchField("origin");}}/></span>
             </label>
+            <PlaceSuggestions query={origin} active={searchField==="origin"&&!originLabel&&!parseCoordinates(origin)} onPick={p=>choosePlace("origin",p)}/>
             <div className="ml-12 border-t border-neutral-200"/>
             <label className="relative flex items-center gap-3 px-4 py-2">
               <MapPin size={21} className="shrink-0 text-neutral-900 bg-white" aria-hidden="true"/>
-              <span className="flex-1 min-w-0"><span className="text-xs font-semibold text-neutral-600">Destino</span><input ref={destinationInput} className="tw-rider-route-input" required maxLength={160} value={destination} placeholder="Para onde vais?" onChange={e=>setDestination(e.target.value)}/></span>
+              <span className="flex-1 min-w-0"><span className="text-xs font-semibold text-neutral-600">Destino</span><input ref={destinationInput} className="tw-rider-route-input" required maxLength={160} value={destinationLabel||destination} placeholder="Para onde vais?" autoComplete="off" onFocus={()=>setSearchField("destination")} onChange={e=>{destinationRevision.current++;setDestinationLabel("");setDestination(e.target.value);setRoad(null);setSearchField("destination");}}/></span>
             </label>
+            <PlaceSuggestions query={destination} active={searchField==="destination"&&!destinationLabel&&!parseCoordinates(destination)} onPick={p=>choosePlace("destination",p)}/>
           </div>
+          <p className="text-xs text-neutral-500">Pesquisa local em Lichinga. Ao escrever ou usar GPS, os dados necessários são enviados ao fornecedor de mapas.</p>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
             <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-800 !min-h-11" disabled={locating} onClick={locate}><LocateFixed size={18} aria-hidden="true"/>{locating?"A obter localização…":"Usar a minha localização"}</button>
             <button type="button" aria-expanded={showReference} className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-800 !min-h-11" onClick={()=>setShowReference(v=>!v)}><Plus size={18} aria-hidden="true"/>{showReference?"Ocultar referência":"Adicionar referência"}</button>
           </div>
           {locationNotice&&<p role="status" className="text-xs text-neutral-600">{locationNotice}</p>}
           {showReference&&<label className="block text-sm font-medium">Referência da partida (opcional)<input className="tw-field" maxLength={160} value={reference} placeholder="Ex.: Em frente à escola" onChange={e=>setReference(e.target.value)}/></label>}
-          <details className="border-t border-neutral-100 pt-3"><summary className="cursor-pointer text-sm font-semibold">Mapa e pesquisa de endereços</summary><StreetPlanner origin={origin} destination={destination} vehicle={vehicle==="car"?"car":"motorcycle"} onOrigin={v=>{cancelLocation();setOrigin(v);setRoad(null);}} onDestination={v=>{setDestination(v);setRoad(null);}} onRoute={v=>setRoad(v?{key:routeKey,value:v}:null)} route={currentRoad}/></details><details className="border-t border-neutral-100 pt-3"><summary className="cursor-pointer text-sm font-semibold">Pesquisar cidade</summary><CitySearch onSelect={pickDestination}/></details><div className="border-t border-neutral-100 pt-3">
+          <details className="border-t border-neutral-100 pt-3"><summary className="cursor-pointer text-sm font-semibold">Mapa e pesquisa de endereços</summary><StreetPlanner origin={origin} destination={destination} vehicle={vehicle==="car"?"car":"motorcycle"} onOrigin={(v,label)=>mapPick("origin",v,label)} onDestination={(v,label)=>mapPick("destination",v,label)} onRoute={v=>setRoad(v?{key:routeKey,value:v}:null)} route={currentRoad}/></details><details className="border-t border-neutral-100 pt-3"><summary className="cursor-pointer text-sm font-semibold">Pesquisar cidade</summary><CitySearch onSelect={pickDestination}/></details><div className="border-t border-neutral-100 pt-3">
             <p className="text-xs font-semibold text-neutral-600 mb-2">Destinos rápidos</p>
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={()=>chooseSaved("Casa")} className="tw-rider-chip"><House size={16} aria-hidden="true"/>Casa</button>
@@ -107,7 +117,7 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
               <div className="flex gap-2 flex-wrap"><button type="button" className="tw-secondary text-sm" disabled={!placeDraft.trim()} onClick={()=>{setSaved(prev=>({...prev,[editingPlace]:placeDraft.trim()}));pickDestination(placeDraft.trim());}}>Usar destino</button><button type="button" className="text-sm underline" onClick={()=>setEditingPlace(null)}>Cancelar</button></div>
               <p className="text-xs text-neutral-500">Guardado apenas nesta sessão de demonstração.</p>
             </div>}
-            {recent.length>0&&<div className="mt-3"><p className="text-xs text-neutral-600 font-semibold mb-1">Recentes</p>{recent.map(place=><button key={place} type="button" className="flex w-full text-left items-center gap-2 text-sm border-b border-neutral-100" onClick={()=>pickDestination(place)}><Clock size={16} aria-hidden="true"/><span className="break-words">{place}</span></button>)}</div>}
+            {recent.length>0&&<div className="mt-3"><p className="text-xs text-neutral-600 font-semibold mb-1">Recentes</p>{recent.map(place=><button key={place.value} type="button" className="flex w-full text-left items-center gap-2 text-sm border-b border-neutral-100" onClick={()=>{pickDestination(place.value);setDestinationLabel(place.label);}}><Clock size={16} aria-hidden="true"/><span className="break-words">{place.label}</span></button>)}</div>}
           </div>
         </section>
         <fieldset className="space-y-3"><legend className="text-lg font-bold">Escolhe o veículo</legend>
@@ -141,16 +151,16 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
       <section className="tw-panel space-y-4">
         <h2 className="text-xl font-bold">Rever proposta</h2>
         <div className="rounded-xl border border-neutral-200 p-4 space-y-3">
-          <div className="flex items-start gap-3"><span className="mt-1.5 w-3 h-3 shrink-0 border-[3px] border-neutral-900 rounded-full"/><div className="min-w-0"><p className="text-xs text-neutral-600">Partida</p><p className="font-semibold break-words">{origin}</p>{reference.trim()&&<p className="text-xs text-neutral-600 break-words">{reference}</p>}</div></div>
+          <div className="flex items-start gap-3"><span className="mt-1.5 w-3 h-3 shrink-0 border-[3px] border-neutral-900 rounded-full"/><div className="min-w-0"><p className="text-xs text-neutral-600">Partida</p><p className="font-semibold break-words">{originLabel||origin}</p>{reference.trim()&&<p className="text-xs text-neutral-600 break-words">{reference}</p>}</div></div>
           <div className="ml-1 border-l border-dashed border-neutral-400 h-3"/>
-          <div className="flex items-start gap-3"><MapPin size={19} className="shrink-0" aria-hidden="true"/><div className="min-w-0"><p className="text-xs text-neutral-600">Destino</p><p className="font-semibold break-words">{destination}</p></div></div>
+          <div className="flex items-start gap-3"><MapPin size={19} className="shrink-0" aria-hidden="true"/><div className="min-w-0"><p className="text-xs text-neutral-600">Destino</p><p className="font-semibold break-words">{destinationLabel||destination}</p></div></div>
         </div>
         <div className="flex items-center justify-between gap-3"><span className="text-sm text-neutral-600">Veículo</span><strong>{vehicle==="car"?"Carro":"Motociclo"}</strong></div>
         <div className="border-t border-neutral-200 pt-4 flex items-center justify-between gap-3"><span className="text-sm text-neutral-600">Preço proposto</span><strong className="text-2xl tw-money">{money(amount)}</strong></div>
         <p className="text-sm text-neutral-600">O pedido-piloto será guardado e poderá receber propostas de teste. Não haverá deslocações nem cobranças.</p>
         <button type="button" className="tw-secondary w-full flex items-center justify-center gap-2" onClick={()=>setStage("edit")}><ArrowLeft size={17} aria-hidden="true"/>Editar proposta</button>
       </section>
-      <div className="tw-rider-action">{submitError&&<p role="alert" className="text-sm text-red-700">{submitError}</p>}{!canSubmit&&<p className="text-sm">Entra e guarda o perfil para criar um pedido-piloto.</p>}<button type="button" className="tw-rider-cta w-full" disabled={!canSubmit||submitting} onClick={async()=>{setSubmitting(true);setSubmitError("");try{await pilotCommand({action:"request",origin:origin.trim(),destination:destination.trim(),vehicle_kind:vehicle==="car"?"car":"motorcycle",price_minor:Math.round(amount*100),pickup_reference:reference.trim()||null});setRecent(prev=>[destination.trim(),...prev.filter(p=>p!==destination.trim())].slice(0,5));setStage("confirmed");onSubmitted?.();}catch{setSubmitError("Pedido recusado. Confirma o perfil e se já existe um pedido aberto.");}finally{setSubmitting(false);}}}>Registar pedido-piloto</button></div>
+      <div className="tw-rider-action">{submitError&&<p role="alert" className="text-sm text-red-700">{submitError}</p>}{!canSubmit&&<p className="text-sm">Entra e guarda o perfil para criar um pedido-piloto.</p>}<button type="button" className="tw-rider-cta w-full" disabled={!canSubmit||submitting} onClick={async()=>{setSubmitting(true);setSubmitError("");try{await pilotCommand({action:"request",origin:origin.trim(),destination:destination.trim(),vehicle_kind:vehicle==="car"?"car":"motorcycle",price_minor:Math.round(amount*100),pickup_reference:reference.trim()||null});setRecent(prev=>[{value:destination.trim(),label:destinationLabel||destination.trim()},...prev.filter(p=>p.value!==destination.trim())].slice(0,5));setStage("confirmed");onSubmitted?.();}catch{setSubmitError("Pedido recusado. Confirma o perfil e se já existe um pedido aberto.");}finally{setSubmitting(false);}}}>Registar pedido-piloto</button></div>
     </>:<section className="tw-panel text-center space-y-4" aria-live="polite">
       <span className="mx-auto flex w-14 h-14 rounded-full bg-yellow-100 items-center justify-center"><Check size={28} aria-hidden="true"/></span>
       <h2 className="text-xl font-bold">Pedido-piloto registado</h2><p className="text-sm text-neutral-600">A proposta foi guardada para teste. Não houve viagem nem cobrança.</p><button type="button" className="tw-rider-cta w-full" onClick={reset}>Planear outra viagem</button>
