@@ -5,8 +5,9 @@ export const bucket="driver-private-documents";
 // The database generates these fields in BEFORE INSERT triggers. Clients have
 // no INSERT grants on them. Keep generated types intact and narrow the write API.
 type Tables=Database["public"]["Tables"];
-type ClientDatabase=Omit<Database,"public">&{public:Omit<Database["public"],"Tables">&{Tables:Omit<Tables,"pilot_wallet_entries"|"support_messages">&{
+type ClientDatabase=Omit<Database,"public">&{public:Omit<Database["public"],"Tables">&{Tables:Omit<Tables,"pilot_wallet_entries"|"support_messages"|"pilot_ride_messages">&{
  pilot_wallet_entries:Omit<Tables["pilot_wallet_entries"],"Insert">&{Insert:Pick<Tables["pilot_wallet_entries"]["Insert"],"driver_id"|"kind"|"amount_minor"|"reference"|"ride_id">};
+ pilot_ride_messages:Omit<Tables["pilot_ride_messages"],"Insert">&{Insert:Pick<Tables["pilot_ride_messages"]["Insert"],"ride_id"|"sender_id"|"body">};
  support_messages:Omit<Tables["support_messages"],"Insert">&{Insert:Pick<Tables["support_messages"]["Insert"],"ticket_id"|"sender_id"|"body">};
 }}};
 export async function driverClient(){const {supabase}=await import("../integrations/supabase/client");return supabase as unknown as SupabaseClient<ClientDatabase>;}

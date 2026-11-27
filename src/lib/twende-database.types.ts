@@ -489,6 +489,41 @@ export type Database = {
         }
         Relationships: []
       }
+      pilot_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          read_at: string | null
+          recipient_id: string
+          ride_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          read_at?: string | null
+          recipient_id: string
+          ride_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          read_at?: string | null
+          recipient_id?: string
+          ride_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_notifications_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pilot_ride_identity: {
         Row: {
           driver_name: string
@@ -519,6 +554,44 @@ export type Database = {
             foreignKeyName: "pilot_ride_identity_ride_id_fkey"
             columns: ["ride_id"]
             isOneToOne: true
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pilot_ride_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          read_at: string | null
+          recipient_id: string
+          ride_id: string
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          recipient_id: string
+          ride_id: string
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          recipient_id?: string
+          ride_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_ride_messages_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
             referencedRelation: "rides"
             referencedColumns: ["id"]
           },
