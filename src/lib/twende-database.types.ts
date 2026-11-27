@@ -489,6 +489,41 @@ export type Database = {
         }
         Relationships: []
       }
+      pilot_ride_identity: {
+        Row: {
+          driver_name: string
+          make: string
+          model: string
+          plate: string
+          ride_id: string
+          vehicle_kind: string
+        }
+        Insert: {
+          driver_name: string
+          make: string
+          model: string
+          plate: string
+          ride_id: string
+          vehicle_kind: string
+        }
+        Update: {
+          driver_name?: string
+          make?: string
+          model?: string
+          plate?: string
+          ride_id?: string
+          vehicle_kind?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_ride_identity_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: true
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pilot_ride_ratings: {
         Row: {
           created_at: string
@@ -516,6 +551,38 @@ export type Database = {
             foreignKeyName: "pilot_ride_ratings_ride_id_fkey"
             columns: ["ride_id"]
             isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pilot_start_pins: {
+        Row: {
+          attempts: number
+          expires_at: string
+          issued_at: string
+          pin: string
+          ride_id: string
+        }
+        Insert: {
+          attempts?: number
+          expires_at: string
+          issued_at?: string
+          pin: string
+          ride_id: string
+        }
+        Update: {
+          attempts?: number
+          expires_at?: string
+          issued_at?: string
+          pin?: string
+          ride_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_start_pins_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: true
             referencedRelation: "rides"
             referencedColumns: ["id"]
           },
@@ -685,8 +752,10 @@ export type Database = {
           price_minor: number | null
           rating: number | null
           reason: string | null
+          result: string
           ride_id: string | null
           safety_exception: boolean
+          start_pin: string | null
           vehicle_kind: string | null
         }
         Insert: {
@@ -702,8 +771,10 @@ export type Database = {
           price_minor?: number | null
           rating?: number | null
           reason?: string | null
+          result?: string
           ride_id?: string | null
           safety_exception?: boolean
+          start_pin?: string | null
           vehicle_kind?: string | null
         }
         Update: {
@@ -719,8 +790,10 @@ export type Database = {
           price_minor?: number | null
           rating?: number | null
           reason?: string | null
+          result?: string
           ride_id?: string | null
           safety_exception?: boolean
+          start_pin?: string | null
           vehicle_kind?: string | null
         }
         Relationships: [
