@@ -4,7 +4,7 @@ import {PassengerPreview} from "../components/passenger-preview";
 const {command,reverse,autocomplete}=vi.hoisted(()=>({command:vi.fn(),reverse:vi.fn(),autocomplete:vi.fn()}));
 vi.mock("../components/pilot-rides",()=>({pilotCommand:command}));
 vi.mock("../components/driver-shared",()=>({driverClient:async()=>({auth:{getSession:async()=>({data:{session:{access_token:"test"}}})}})}));
-vi.mock("../lib/street-provider.functions",()=>({autocompleteStreet:autocomplete,reverseStreet:reverse,searchStreet:vi.fn(),searchNamedPlaces:vi.fn(),calculateStreetRoute:vi.fn(),loadGeoTiles:vi.fn(),mapsErrorMessage:()=>"Serviço indisponível"}));
+vi.mock("../lib/street-provider.functions",()=>({autocompleteStreet:autocomplete,reverseStreet:reverse,searchStreet:vi.fn(),searchNamedPlaces:vi.fn(),searchPublicCatalogue:vi.fn().mockResolvedValue([]),calculateStreetRoute:vi.fn(),loadGeoTiles:vi.fn(),mapsErrorMessage:()=>"Serviço indisponível"}));
 beforeEach(()=>{vi.clearAllMocks();command.mockResolvedValue({id:"test"});autocomplete.mockResolvedValue({status:"ok",places:[{label:"Global — resultado simulado, Lichinga",point:[35.25,-13.3]}]});reverse.mockResolvedValue({status:"ok",place:{label:"Nomba — resultado simulado",point:[35.24,-13.29]}});});
 afterEach(()=>{cleanup();vi.unstubAllGlobals();});
 describe("Lichinga smart search",()=>{

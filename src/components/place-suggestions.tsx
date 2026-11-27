@@ -5,7 +5,7 @@ import {searchLocalPlaces} from "./local-place-search";
 import {autocompleteStreet,searchStreet,reverseStreet,mapsErrorMessage,searchNamedPlaces} from "../lib/street-provider.functions";
 import type {Place} from "../lib/street-geometry";
 import type {Point} from "../lib/geography";
-async function headers(){const c=await driverClient();const s=await c.auth.getSession();if(s.error||!s.data.session)throw Error("session");return {Authorization:"Bearer "+s.data.session.access_token};}
+async function headers():Promise<Record<string,string>>{try{const c=await driverClient();const s=await c.auth.getSession();if(!s.error&&s.data.session)return {Authorization:"Bearer "+s.data.session.access_token};}catch{/* Guest map requests do not depend on Auth. */}return {};}
 export async function addressForPoint(p:Point){const r=await reverseStreet({data:{point:[p[0],p[1]]},headers:await headers()});return r.status==="ok"?r.place?.label??null:null;}
 export function PlaceSuggestions({query,active,onPick}:{query:string;active:boolean;onPick:(p:Place)=>void}){
  const q=query.trim();const [local,setLocal]=useState<{q:string;places:Place[];failed:boolean}|null>(null);
