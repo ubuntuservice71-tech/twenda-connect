@@ -313,6 +313,39 @@ export type Database = {
           },
         ]
       }
+      marketing_drafts: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          module: string
+          payload: Json
+          status: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          module: string
+          payload: Json
+          status?: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          module?: string
+          payload?: Json
+          status?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: []
+      }
       passenger_accounts: {
         Row: {
           contact_synced_at: string

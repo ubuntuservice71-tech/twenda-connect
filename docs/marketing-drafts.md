@@ -1,0 +1,2 @@
+# Marketing — rascunhos persistentes
+Referência eTaxi pp. 13, 15–16, 24, 26. Promoções, incentivos, bónus de indicação, valores de indicação, banners e notificações guardados em marketing_drafts com RLS e auditoria. Payload é rascunho de formulário, não regra operacional; sem validação comercial completa, publicação de imagens, envio de push, rede de indicações, descontos ou créditos. Teste SQL de criação/edição/eliminação revertido. Compilação e testes UI pendentes.
