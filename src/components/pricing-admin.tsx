@@ -3,9 +3,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../lib/twende-database.types";
 type T=Database["public"]["Tables"];
 type Kind="types"|"settings";
-type Draft=Record<string,string>;
+type Draft=Record<string,string>&{ride_type:string;city_id:string;version:string;custom_pricing:string;name:string;description:string;free_window_seconds:string;no_show_seconds:string;arrival_fee_minor:string;absence_fee_minor:string;base_distance_km:string;base_price_minor:string;per_km_minor:string;per_minute_minor:string;minimum_minor:string;waiting_per_minute_minor:string;free_wait_minutes:string;commission_bps:string};
 const prices=[["base_distance_km","Distância base (km)"],["base_price_minor","Preço base (MT)"],["per_km_minor","Preço por km (MT)"],["per_minute_minor","Preço por minuto (MT)"],["minimum_minor","Tarifa mínima (MT)"],["waiting_per_minute_minor","Espera por minuto (MT)"],["free_wait_minutes","Espera gratuita (min)"],["commission_bps","Comissão (%)"]] as const;
-const initial=(kind:Kind):Draft=>kind==="types"?{ride_type:"car",city_id:"",version:"1",custom_pricing:"true",commission_bps:"10"}:{ride_type:"car",city_id:"",name:"",description:"",free_window_seconds:"120",no_show_seconds:"300"};
+const initial=(_kind:Kind):Draft=>({ride_type:"car",city_id:"",version:"1",custom_pricing:"true",name:"",description:"",free_window_seconds:"120",no_show_seconds:"300",arrival_fee_minor:"",absence_fee_minor:"",base_distance_km:"",base_price_minor:"",per_km_minor:"",per_minute_minor:"",minimum_minor:"",waiting_per_minute_minor:"",free_wait_minutes:"",commission_bps:"10"});
 async function client(){const {supabase}=await import("../integrations/supabase/client");return supabase as unknown as SupabaseClient<Database>;}
 function amount(v:string|undefined,scale=1){if(!v?.trim())return null;const n=Number(v.replace(",","."));if(!Number.isFinite(n)||n<0||Math.abs(n*scale-Math.round(n*scale))>0.000001)throw Error("validation");return Math.round(n*scale);}
 export function PricingAdmin({kind}:{kind:Kind}){

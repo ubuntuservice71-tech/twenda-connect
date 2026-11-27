@@ -36,8 +36,8 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
   const amount=parsePrice(price);
   const same=origin.trim().toLocaleLowerCase()===destination.trim().toLocaleLowerCase();
   const hasRoute=Boolean(origin.trim()&&destination.trim()&&!same);
-  const valid=hasRoute&&Number.isFinite(amount)&&amount>0&&Number.isSafeInteger(Math.round(amount*100));
-  const guidance=!origin.trim()||!destination.trim()?"Indica a partida e o destino para continuar.":same?"Escolhe um destino diferente da partida.":!valid?"Indica um preço válido, superior a zero.":"Confirma os detalhes antes de avançar.";
+  const valid=hasRoute&&Number.isFinite(amount)&&amount>0&&Number.isSafeInteger(Math.round(amount*100))&&Math.round(amount*100)<=1000000000;
+  const guidance=!origin.trim()||!destination.trim()?"Indica a partida e o destino para continuar.":same?"Escolhe um destino diferente da partida.":!valid?"Indica um preço válido entre 0,01 MT e 10 000 000 MT.":"Confirma os detalhes antes de avançar.";
   const pickDestination=(value:string)=>{setDestination(value);setEditingPlace(null);};
   const chooseSaved=(place:SavedPlace)=>{
     if(saved[place]){pickDestination(saved[place]!);return;}
@@ -137,13 +137,13 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
         </div>
         <div className="flex items-center justify-between gap-3"><span className="text-sm text-neutral-600">Veículo</span><strong>{vehicle==="car"?"Carro":"Motociclo"}</strong></div>
         <div className="border-t border-neutral-200 pt-4 flex items-center justify-between gap-3"><span className="text-sm text-neutral-600">Preço proposto</span><strong className="text-2xl tw-money">{money(amount)}</strong></div>
-        <p className="text-sm text-neutral-600">O pedido é apenas uma simulação. Não haverá contacto com motoristas nem qualquer cobrança.</p>
+        <p className="text-sm text-neutral-600">O pedido-piloto será guardado e poderá receber propostas de teste. Não haverá deslocações nem cobranças.</p>
         <button type="button" className="tw-secondary w-full flex items-center justify-center gap-2" onClick={()=>setStage("edit")}><ArrowLeft size={17} aria-hidden="true"/>Editar proposta</button>
       </section>
-      <div className="tw-rider-action">{submitError&&<p role="alert" className="text-sm text-red-700">{submitError}</p>}{!canSubmit&&<p className="text-sm">Entra e guarda o perfil para criar um pedido-piloto.</p>}<button type="button" className="tw-rider-cta w-full" disabled={!canSubmit||submitting} onClick={async()=>{setSubmitting(true);setSubmitError("");try{await pilotCommand({action:"request",origin:origin.trim(),destination:destination.trim(),vehicle_kind:vehicle==="car"?"car":"motorcycle",price_minor:Math.round(amount*100),pickup_reference:reference.trim()||null});onSubmitted?.();}catch{setSubmitError("Pedido recusado. Confirma o perfil e se já existe um pedido aberto.");}finally{setSubmitting(false);}}}>Registar pedido-piloto</button></div>
+      <div className="tw-rider-action">{submitError&&<p role="alert" className="text-sm text-red-700">{submitError}</p>}{!canSubmit&&<p className="text-sm">Entra e guarda o perfil para criar um pedido-piloto.</p>}<button type="button" className="tw-rider-cta w-full" disabled={!canSubmit||submitting} onClick={async()=>{setSubmitting(true);setSubmitError("");try{await pilotCommand({action:"request",origin:origin.trim(),destination:destination.trim(),vehicle_kind:vehicle==="car"?"car":"motorcycle",price_minor:Math.round(amount*100),pickup_reference:reference.trim()||null});setRecent(prev=>[destination.trim(),...prev.filter(p=>p!==destination.trim())].slice(0,5));setStage("confirmed");onSubmitted?.();}catch{setSubmitError("Pedido recusado. Confirma o perfil e se já existe um pedido aberto.");}finally{setSubmitting(false);}}}>Registar pedido-piloto</button></div>
     </>:<section className="tw-panel text-center space-y-4" aria-live="polite">
       <span className="mx-auto flex w-14 h-14 rounded-full bg-yellow-100 items-center justify-center"><Check size={28} aria-hidden="true"/></span>
-      <h2 className="text-xl font-bold">Simulação concluída</h2><p className="text-sm text-neutral-600">A tua proposta não foi enviada. Nenhuma corrida foi solicitada nem ocorreu cobrança.</p><button type="button" className="tw-rider-cta w-full" onClick={reset}>Planear outra viagem</button>
+      <h2 className="text-xl font-bold">Pedido-piloto registado</h2><p className="text-sm text-neutral-600">A proposta foi guardada para teste. Não houve viagem nem cobrança.</p><button type="button" className="tw-rider-cta w-full" onClick={reset}>Planear outra viagem</button>
     </section>}
   </section>;
 }
