@@ -108,6 +108,63 @@ export type Database = {
           },
         ]
       }
+      cancellation_policies: {
+        Row: {
+          absence_fee_minor: number | null
+          active: boolean
+          arrival_fee_minor: number | null
+          city_id: string | null
+          created_at: string
+          description: string
+          free_window_seconds: number
+          id: string
+          name: string
+          no_show_seconds: number
+          ride_type: string
+        }
+        Insert: {
+          absence_fee_minor?: number | null
+          active?: boolean
+          arrival_fee_minor?: number | null
+          city_id?: string | null
+          created_at?: string
+          description?: string
+          free_window_seconds?: number
+          id?: string
+          name: string
+          no_show_seconds?: number
+          ride_type: string
+        }
+        Update: {
+          absence_fee_minor?: number | null
+          active?: boolean
+          arrival_fee_minor?: number | null
+          city_id?: string | null
+          created_at?: string
+          description?: string
+          free_window_seconds?: number
+          id?: string
+          name?: string
+          no_show_seconds?: number
+          ride_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cancellation_policies_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cancellation_policies_ride_type_fkey"
+            columns: ["ride_type"]
+            isOneToOne: false
+            referencedRelation: "ride_types"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       cities: {
         Row: {
           active: boolean
@@ -295,6 +352,99 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ride_tariffs: {
+        Row: {
+          active: boolean
+          base_distance_km: number | null
+          base_price_minor: number | null
+          city_id: string | null
+          commission_bps: number
+          created_at: string
+          custom_pricing: boolean
+          free_wait_minutes: number | null
+          id: string
+          minimum_minor: number | null
+          per_km_minor: number | null
+          per_minute_minor: number | null
+          ride_type: string
+          version: number
+          waiting_per_minute_minor: number | null
+        }
+        Insert: {
+          active?: boolean
+          base_distance_km?: number | null
+          base_price_minor?: number | null
+          city_id?: string | null
+          commission_bps?: number
+          created_at?: string
+          custom_pricing?: boolean
+          free_wait_minutes?: number | null
+          id?: string
+          minimum_minor?: number | null
+          per_km_minor?: number | null
+          per_minute_minor?: number | null
+          ride_type: string
+          version?: number
+          waiting_per_minute_minor?: number | null
+        }
+        Update: {
+          active?: boolean
+          base_distance_km?: number | null
+          base_price_minor?: number | null
+          city_id?: string | null
+          commission_bps?: number
+          created_at?: string
+          custom_pricing?: boolean
+          free_wait_minutes?: number | null
+          id?: string
+          minimum_minor?: number | null
+          per_km_minor?: number | null
+          per_minute_minor?: number | null
+          ride_type?: string
+          version?: number
+          waiting_per_minute_minor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ride_tariffs_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ride_tariffs_ride_type_fkey"
+            columns: ["ride_type"]
+            isOneToOne: false
+            referencedRelation: "ride_types"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      ride_types: {
+        Row: {
+          active: boolean
+          capacity: number | null
+          code: string
+          description: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          capacity?: number | null
+          code: string
+          description?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          capacity?: number | null
+          code?: string
+          description?: string
+          name?: string
+        }
+        Relationships: []
       }
       rides: {
         Row: {
