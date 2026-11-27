@@ -117,7 +117,12 @@ export type Database = {
           latitude: number
           longitude: number
           name: string
+          night_end: string | null
+          night_multiplier: number | null
+          night_start: string | null
           province: string
+          service_end: string | null
+          service_start: string | null
         }
         Insert: {
           active?: boolean
@@ -127,7 +132,12 @@ export type Database = {
           latitude: number
           longitude: number
           name: string
+          night_end?: string | null
+          night_multiplier?: number | null
+          night_start?: string | null
           province: string
+          service_end?: string | null
+          service_start?: string | null
         }
         Update: {
           active?: boolean
@@ -137,7 +147,12 @@ export type Database = {
           latitude?: number
           longitude?: number
           name?: string
+          night_end?: string | null
+          night_multiplier?: number | null
+          night_start?: string | null
           province?: string
+          service_end?: string | null
+          service_start?: string | null
         }
         Relationships: []
       }

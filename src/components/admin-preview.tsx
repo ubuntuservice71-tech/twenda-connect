@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AdminModule } from "./admin-module";
+import { LocationAdmin } from "./location-admin";
 import { ArrowLeft, ArrowRight, LayoutDashboard, CalendarDays, MapPin, Map, CreditCard, CarFront, Users, Navigation, Wallet, FileCheck, Gift, MessageSquare, Ticket, Settings, Search, Menu, X, Tag, Clock, ShieldCheck, FileText, Globe, Image, HelpCircle, SlidersHorizontal, KeyRound, RefreshCw } from "lucide-react";
 
 const groups = [
@@ -67,6 +68,7 @@ const initial = { commission: 10, freeMinutes: 2, waitMinutes: 5, cancellationFe
 
 export function AdminPreview({onBack}: {onBack?: () => void}) {
   const [tab, setTab] = useState("overview");
+  const [locationCity,setLocationCity]=useState("");
   const [checked, setChecked] = useState<string[]>([]);
   const [status, setStatus] = useState("Pendente");
   const [settings, setSettings] = useState(initial);
@@ -77,7 +79,7 @@ export function AdminPreview({onBack}: {onBack?: () => void}) {
   const [pageSize,setPageSize]=useState("10");
   const [menu,setMenu]=useState(false);
   const selected=allItems.find(item=>item.id===tab);
-  const changeTab=(id:string)=>{setTab(id);setMenu(false);};
+  const changeTab=(id:string)=>{setLocationCity("");setTab(id);setMenu(false);};
   const filtered=groups.map(g=>({...g,items:g.items.filter(i=>i.label.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()))})).filter(g=>g.items.length);
   return (
     <div className="min-h-dvh bg-neutral-50 text-neutral-900">
@@ -123,7 +125,7 @@ export function AdminPreview({onBack}: {onBack?: () => void}) {
             <h2 className="text-lg font-bold">Simulação e regras iniciais</h2>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{[["Candidaturas pendentes",status==="Pendente"?"1":"0"],["Motoristas aprovados",status==="Aprovado"?"1":"0"],["Corridas simuladas","1"],["Comissão configurada",saved.commission+"%"]].map(([label,value])=><article key={label} className={panel}><p className="text-sm text-neutral-600">{label}</p><strong className="text-2xl tw-money">{value}</strong></article>)}</div>
           </>}
-          {tab!=="overview" && <AdminModule key={tab} id={tab}/>}
+          {(tab==="cities"||tab==="zones") ? <LocationAdmin key={tab+locationCity} kind={tab} cityFilter={locationCity} onZones={id=>{setLocationCity(id);setTab("zones");}}/> : tab!=="overview" && <AdminModule key={tab} id={tab}/>}
       {(tab==="drivers"||tab==="documents") && <article className={panel}>
         <h2 className="text-xl font-bold">Candidatura de motorista fictício</h2><p>Estado: {status}</p><p className="text-sm">Simula a verificação de cada requisito antes de aprovar.</p>
         {documents.map(doc=><label key={doc} className="flex gap-3 items-center min-h-11 py-2 border-b border-neutral-100"><input type="checkbox" disabled={status!=="Pendente"} checked={checked.includes(doc)} onChange={e=>setChecked(prev=>e.target.checked?[...prev,doc]:prev.filter(x=>x!==doc))}/>{doc}</label>)}
