@@ -1,0 +1,3 @@
+import {isPoint,validPolygon,type Point} from "./geography";
+// Local coverage preview: boundary counts as inside. Not an authorization rule.
+export function pointInZone(p:Point,vertices:Point[]):boolean|null{if(!isPoint(p)||!vertices.every(isPoint)||!validPolygon(vertices))return null;let inside=false;for(let i=0,j=vertices.length-1;i<vertices.length;j=i++){const a=vertices[j]!,b=vertices[i]!;const cross=(b[0]-a[0])*(p[1]-a[1])-(b[1]-a[1])*(p[0]-a[0]);if(Math.abs(cross)<1e-12&&p[0]>=Math.min(a[0],b[0])-1e-10&&p[0]<=Math.max(a[0],b[0])+1e-10&&p[1]>=Math.min(a[1],b[1])-1e-10&&p[1]<=Math.max(a[1],b[1])+1e-10)return true;if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])inside=!inside;}return inside;}
