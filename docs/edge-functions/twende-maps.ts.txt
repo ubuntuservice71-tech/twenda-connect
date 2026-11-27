@@ -1,0 +1,57 @@
+type Point=readonly [number,number];
+type Place={label:string;point:Point};
+type RoadRoute={distance:number;duration:number;points:Point[]};
+function isPoint(p:unknown):p is Point{return Array.isArray(p)&&p.length===2&&p.every(x=>typeof x==="number"&&Number.isFinite(x))&&Math.abs(p[0])<=180&&Math.abs(p[1])<=90;}
+function obj(x:unknown):Record<string,unknown>|null{return x!==null&&typeof x==="object"&&!Array.isArray(x)?x as Record<string,unknown>:null;}
+export function parseGeoapifyPlaces(input:unknown):Place[]{const r=obj(input)?.["results"];if(!Array.isArray(r))return [];return r.slice(0,8).flatMap(v=>{const p=obj(v);if(!p||p["country_code"]!=="mz"||typeof p["formatted"]!=="string")return [];const point=[p["lon"],p["lat"]];return isPoint(point)&&p["formatted"].trim()?[{label:p["formatted"].slice(0,240),point}]:[];});}
+export function parseGeoapifyRoute(input:unknown):RoadRoute|null{const root=obj(input);if(root?.["type"]!=="FeatureCollection"||!Array.isArray(root["features"]))return null;const f=obj(root["features"][0]);const p=obj(f?.["properties"]),g=obj(f?.["geometry"]);const distance=p?.["distance"],duration=p?.["time"];const lines=g?.["coordinates"];if(typeof distance!=="number"||typeof duration!=="number"||!Number.isFinite(distance)||!Number.isFinite(duration)||distance<=0||duration<=0||g?.["type"]!=="MultiLineString"||!Array.isArray(lines)||lines.length!==1)return null;const points:unknown=lines[0];if(!Array.isArray(points)||points.length<2||points.length>20000||!points.every(isPoint))return null;return {distance,duration,points:points as Point[]};}
+export function geoapifyMode(vehicle:"car"|"motorcycle"){return vehicle==="car"?"drive":"motorcycle";}
+export type TileCoordinate={x:number;y:number};
+export function validTile(z:number,p:TileCoordinate){return Number.isInteger(z)&&z>=3&&z<=18&&Number.isInteger(p.x)&&Number.isInteger(p.y)&&p.x>=0&&p.y>=0&&p.x<2**z&&p.y<2**z;}
+
+const launchCity={center:[35.2459,-13.2999]};
+const cors={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, apikey, content-type, x-client-info","Access-Control-Allow-Methods":"POST, OPTIONS","Cache-Control":"no-store"};
+const reply=(body:unknown,status=200)=>Response.json(body,{status,headers:cors});
+async function request(url:URL):Promise<unknown>{const r=await fetch(url,{redirect:"error",signal:AbortSignal.timeout(10000),headers:{Accept:"application/json"}});if(!r.ok)throw Error("Provider unavailable");const s=await r.text();if(s.length>2000000)throw Error("Response too large");return JSON.parse(s);}
+function geoKey(){return Deno.env.get("TWENDE_GEOAPIFY_API_KEY")?.trim()||null;}
+function geoUrl(path:string,key:string){const u=new URL("https://api.geoapify.com/v1/"+path);u.searchParams.set("apiKey",key);return u;}
+export async function geoSearch(query:string,key:string){const u=geoUrl("geocode/search",key);u.searchParams.set("text",query);u.searchParams.set("format","json");u.searchParams.set("filter","countrycode:mz");u.searchParams.set("bias","proximity:"+launchCity.center.join(","));u.searchParams.set("lang","pt");u.searchParams.set("limit","8");return parseGeoapifyPlaces(await request(u));}
+export async function geoRoute(from:Point,to:Point,vehicle:"car"|"motorcycle",key:string){const u=geoUrl("routing",key);u.searchParams.set("waypoints",[from,to].map(p=>p[1]+","+p[0]).join("|"));u.searchParams.set("mode",geoapifyMode(vehicle));u.searchParams.set("format","geojson");u.searchParams.set("units","metric");u.searchParams.set("lang","pt");return parseGeoapifyRoute(await request(u));}
+export async function geoTiles(z:number,tiles:TileCoordinate[]):Promise<{status:"unconfigured"|"ok"|"unavailable";tiles:{x:number;y:number;src:string}[]}>{
+ const key=geoKey();if(!key)return {status:"unconfigured",tiles:[]};
+ if(tiles.length<1||tiles.length>9||tiles.some(p=>!validTile(z,p))||new Set(tiles.map(p=>p.x+"/"+p.y)).size!==tiles.length)return {status:"unavailable",tiles:[]};
+ const results=await Promise.all(tiles.map(async p=>{try{const u=new URL("https://maps.geoapify.com/v1/tile/osm-carto/"+z+"/"+p.x+"/"+p.y+".png");u.searchParams.set("apiKey",key);const r=await fetch(u,{redirect:"error",signal:AbortSignal.timeout(10000),headers:{Accept:"image/png"}});if(!r.ok||r.headers.get("content-type")?.split(";")[0]!=="image/png")return null;const bytes=new Uint8Array(await r.arrayBuffer());if(bytes.length<8||bytes.length>400000||![137,80,78,71,13,10,26,10].every((b,i)=>bytes[i]===b))return null;let raw="";for(let i=0;i<bytes.length;i+=8192)raw+=String.fromCharCode(...bytes.subarray(i,i+8192));return {...p,src:"data:image/png;base64,"+btoa(raw)};}catch{return null;}}));
+ const images=results.filter((p):p is NonNullable<typeof p>=>p!==null);return {status:images.length===tiles.length?"ok":"unavailable",tiles:images};
+}
+
+Deno.serve(async(req:Request)=>{
+ if(req.method==="OPTIONS")return new Response(null,{status:204,headers:cors});
+ if(req.method!=="POST")return reply({error:"method"},405);
+ try{
+ const auth=req.headers.get("authorization");
+ if(!auth?.startsWith("Bearer ")||auth.length>8192)return reply({error:"unauthorized"},401);
+ const url=Deno.env.get("SUPABASE_URL"),anon=Deno.env.get("SUPABASE_ANON_KEY"),service=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+ if(!url||!anon||!service)return reply({error:"configuration"},503);
+ const u=await fetch(url+"/auth/v1/user",{headers:{apikey:anon,Authorization:auth},signal:AbortSignal.timeout(5000)});
+ if(!u.ok)return reply({error:"unauthorized"},401);
+ const user=await u.json();
+ if(typeof user.id!=="string"||user.is_anonymous||(!user.email_confirmed_at&&!user.phone_confirmed_at))return reply({error:"confirmed_account_required"},403);
+ const raw=await req.text();if(raw.length>8192)return reply({error:"size"},413);
+ let body;try{body=JSON.parse(raw);}catch{return reply({error:"invalid_json"},400);}
+ if(!body||typeof body!=="object")return reply({error:"invalid_input"},400);
+ const key=geoKey();let units=1;
+ if(body.action==="search"){if(typeof body.query!=="string"||body.query.trim().length<3||body.query.trim().length>120)return reply({error:"invalid_query"},400);}
+ else if(body.action==="route"){if(!isPoint(body.from)||!isPoint(body.to)||Math.abs(body.from[1])>85.05112878||Math.abs(body.to[1])>85.05112878||!["car","motorcycle"].includes(body.vehicle))return reply({error:"invalid_route"},400);units=10;}
+ else if(body.action==="tiles"){if(!Array.isArray(body.tiles)||body.tiles.length<1||body.tiles.length>9||body.tiles.some((t:TileCoordinate)=>!t||!validTile(body.z,t))||new Set(body.tiles.map((t:TileCoordinate)=>t.x+"/"+t.y)).size!==body.tiles.length)return reply({error:"invalid_tiles"},400);units=body.tiles.length;}
+ else return reply({error:"invalid_action"},400);
+ if(!key)return reply({status:"unconfigured",places:[],route:null,tiles:[]});
+ const budget=await fetch(url+"/rest/v1/rpc/reserve_map_api_budget",{method:"POST",headers:{apikey:service,Authorization:"Bearer "+service,"Content-Type":"application/json"},body:JSON.stringify({p_user:user.id,p_units:units}),signal:AbortSignal.timeout(5000)});
+ if(!budget.ok)return reply({status:"unavailable",places:[],route:null,tiles:[]});
+ if(await budget.json()!==true)return reply({status:"limited",places:[],route:null,tiles:[]});
+ try{
+ if(body.action==="search")return reply({status:"ok",places:await geoSearch(body.query.trim(),key)});
+ if(body.action==="route"){const route=await geoRoute(body.from,body.to,body.vehicle,key);return reply({status:route?"ok":"unavailable",route});}
+ return reply(await geoTiles(body.z,body.tiles));
+ }catch{return reply({status:"unavailable",places:[],route:null,tiles:[]});}
+ }catch{return reply({error:"request_failed"},500);}
+});
