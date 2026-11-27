@@ -1,0 +1,2 @@
+# Funções e permissões
+Referência eTaxi módulos 45–47. Catálogo de sete funções delegadas, matriz proposta e atribuições protegidas. Apenas auditoria de leitura operacional; restantes funções não podem ser activadas no servidor. Conta admin existente preservada. Atribuições exigem UUID de conta Auth confirmada, não criam contas. RLS de auditoria permite auditor activo, não acesso administrativo geral. Sem edição da matriz ou gestão de superadmin. Testes com conta distinta e compilação pendentes; advisor mantém aviso de palavras-passe comprometidas.

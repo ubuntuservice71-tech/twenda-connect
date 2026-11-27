@@ -939,6 +939,85 @@ export type Database = {
           },
         ]
       }
+      staff_assignments: {
+        Row: {
+          active: boolean
+          display_name: string
+          role_code: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          display_name: string
+          role_code: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          display_name?: string
+          role_code?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_assignments_role_code_fkey"
+            columns: ["role_code"]
+            isOneToOne: false
+            referencedRelation: "staff_roles"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      staff_permissions: {
+        Row: {
+          action: string
+          enforced: boolean
+          resource: string
+          role_code: string
+        }
+        Insert: {
+          action: string
+          enforced?: boolean
+          resource: string
+          role_code: string
+        }
+        Update: {
+          action?: string
+          enforced?: boolean
+          resource?: string
+          role_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_permissions_role_code_fkey"
+            columns: ["role_code"]
+            isOneToOne: false
+            referencedRelation: "staff_roles"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      staff_roles: {
+        Row: {
+          code: string
+          name: string
+          operational: boolean
+        }
+        Insert: {
+          code: string
+          name: string
+          operational?: boolean
+        }
+        Update: {
+          code?: string
+          name?: string
+          operational?: boolean
+        }
+        Relationships: []
+      }
       support_messages: {
         Row: {
           body: string

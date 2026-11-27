@@ -3,8 +3,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../lib/twende-database.types";
 import { AdminPreview } from "./admin-preview";
 import { AuthPanel } from "./auth-panel";
+import { AuditView } from "./staff-admin";
 
-type Access = "checking" | "signed-out" | "denied" | "allowed" | "error";
+type Access = "checking" | "signed-out" | "denied" | "allowed" | "auditor" | "error";
 
 export function AdminGate({onBack}:{onBack:()=>void}) {
   const [access,setAccess]=useState<Access>("checking");
@@ -25,7 +26,7 @@ export function AdminGate({onBack}:{onBack:()=>void}) {
         if(error){setAccess("error");return;}
         if(!data.user.email_confirmed_at){setAccess("denied");return;}
         const result=await client.from("user_roles").select("role").eq("user_id",data.user.id).eq("role","admin").maybeSingle();
-        if(active&&current===revision)setAccess(result.error?"error":result.data?.role==="admin"?"allowed":"denied");
+        if(!active||current!==revision)return;if(result.error){setAccess("error");return;}if(result.data?.role==="admin"){setAccess("allowed");return;}const staff=await client.from("staff_assignments").select("role_code,active").eq("user_id",data.user.id).maybeSingle();if(active&&current===revision)setAccess(staff.error?"error":staff.data?.active&&staff.data.role_code==="auditor"?"auditor":"denied");
       }catch{if(active&&current===revision)setAccess("error");}
     };
     const focus=()=>{void verify();};
@@ -43,6 +44,7 @@ export function AdminGate({onBack}:{onBack:()=>void}) {
     }).catch(()=>{if(active)setAccess("error");});
     return ()=>{active=false;revision++;unsubscribe?.();window.removeEventListener("focus",focus);};
   },[attempt]);
+  if(access==="auditor")return <main className="twende-shell p-5"><button className="tw-secondary" onClick={onBack}>Voltar</button><AuditView/><AuthPanel/></main>;
   if(access==="allowed")return <div className="twende-shell"><AdminPreview onBack={onBack}/></div>;
   return <main className="twende-shell"><section className="max-w-md mx-auto p-5 sm:py-12 space-y-4">
     <button type="button" className="tw-secondary" onClick={onBack}>Voltar</button>
