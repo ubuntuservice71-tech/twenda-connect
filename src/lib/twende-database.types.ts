@@ -765,6 +765,67 @@ export type Database = {
           },
         ]
       }
+      pilot_ride_settlements: {
+        Row: {
+          commission_bps: number
+          commission_minor: number
+          created_at: string
+          driver_id: string
+          entry_id: string | null
+          fare_minor: number
+          passenger_id: string
+          ride_id: string
+          settled_at: string | null
+          status: string
+        }
+        Insert: {
+          commission_bps: number
+          commission_minor: number
+          created_at?: string
+          driver_id: string
+          entry_id?: string | null
+          fare_minor: number
+          passenger_id: string
+          ride_id: string
+          settled_at?: string | null
+          status?: string
+        }
+        Update: {
+          commission_bps?: number
+          commission_minor?: number
+          created_at?: string
+          driver_id?: string
+          entry_id?: string | null
+          fare_minor?: number
+          passenger_id?: string
+          ride_id?: string
+          settled_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_ride_settlements_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "driver_applications"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "pilot_ride_settlements_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: true
+            referencedRelation: "pilot_wallet_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pilot_ride_settlements_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: true
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pilot_start_pins: {
         Row: {
           attempts: number
@@ -1615,6 +1676,42 @@ export type Database = {
       }
     }
     Views: {
+      pilot_wallet_reconciliation: {
+        Row: {
+          commission_bps: number | null
+          commission_minor: number | null
+          driver_id: string | null
+          entry_id: string | null
+          fare_minor: number | null
+          reconciliation: string | null
+          ride_id: string | null
+          settled_at: string | null
+          status: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_ride_settlements_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "driver_applications"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "pilot_ride_settlements_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: true
+            referencedRelation: "pilot_wallet_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pilot_ride_settlements_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: true
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pilot_wallet_summaries: {
         Row: {
           balance_minor: number | null
