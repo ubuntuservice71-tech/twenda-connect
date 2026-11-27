@@ -2,21 +2,21 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, CarFront, Car, ShieldCheck, UserRound } from "lucide-react";
 import { AuthPanel } from "../components/auth-panel";
-import { AdminPreview } from "../components/admin-preview";
+import { AdminGate } from "../components/admin-gate";
 import { DriverPreview } from "../components/driver-preview";
 import { PassengerPreview } from "../components/passenger-preview";
 export const Route = createFileRoute("/")({ component: Index, head: () => ({ meta: [{title:"TWENDE — Vamos juntos"},{name:"description",content:"Mobilidade em Moçambique."}] }) });
 const apps = [
   { id: "passenger", name: "Passageiro", title: "Para onde vamos?", description: "Escolhe o percurso, o veículo e propõe o teu preço.", icon: CarFront, detail: "Planear uma viagem" },
   { id: "driver", name: "Motorista", title: "Conduz com a TWENDE", description: "Gere a tua disponibilidade, propostas e carteira.", icon: Car, detail: "Explorar a área do motorista" },
-  { id: "admin", name: "Administração", title: "Centro de operações", description: "Consulta os indicadores e configurações da plataforma.", icon: ShieldCheck, detail: "Explorar o painel de gestão" },
+  { id: "admin", name: "Administração", title: "Centro de operações", description: "Consulta os indicadores e configurações da plataforma.", icon: ShieldCheck, detail: "Entrar com acesso autorizado" },
 ];
 function Index() {
   const [role, setRole] = useState("");
   const [showAuth, setShowAuth] = useState(false);
   const app = apps.find((a) => a.id === role);
   const back = () => { if(showAuth) setShowAuth(false); else setRole(""); };
-  if(role === "admin" && !showAuth) return <div className="twende-shell"><AdminPreview onBack={()=>setRole("")}/></div>;
+  if(role === "admin" && !showAuth) return <AdminGate onBack={()=>setRole("")}/>;
   return (
     <main className="twende-shell flex flex-col">
       <header className="bg-white border-b border-neutral-200">
