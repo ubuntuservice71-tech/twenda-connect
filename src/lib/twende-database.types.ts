@@ -281,6 +281,38 @@ export type Database = {
           },
         ]
       }
+      driver_locations: {
+        Row: {
+          accuracy_m: number
+          driver_id: string
+          latitude: number
+          longitude: number
+          updated_at: string
+        }
+        Insert: {
+          accuracy_m: number
+          driver_id: string
+          latitude: number
+          longitude: number
+          updated_at?: string
+        }
+        Update: {
+          accuracy_m?: number
+          driver_id?: string
+          latitude?: number
+          longitude?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_locations_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "driver_applications"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       passenger_accounts: {
         Row: {
           contact_synced_at: string
@@ -676,6 +708,7 @@ export type Database = {
       zones: {
         Row: {
           active: boolean
+          boundary: Json | null
           city_id: string
           created_at: string
           description: string | null
@@ -684,6 +717,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          boundary?: Json | null
           city_id: string
           created_at?: string
           description?: string | null
@@ -692,6 +726,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          boundary?: Json | null
           city_id?: string
           created_at?: string
           description?: string | null
