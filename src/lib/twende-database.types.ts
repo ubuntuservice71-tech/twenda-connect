@@ -391,6 +391,66 @@ export type Database = {
           },
         ]
       }
+      local_places: {
+        Row: {
+          aliases: string
+          category: string
+          city: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+          neighbourhood: string
+          source_note: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          aliases?: string
+          category: string
+          city?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          neighbourhood?: string
+          source_note?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          aliases?: string
+          category?: string
+          city?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          neighbourhood?: string
+          source_note?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      map_api_budget: {
+        Row: {
+          day: string
+          scope: string
+          units: number
+        }
+        Insert: {
+          day: string
+          scope: string
+          units: number
+        }
+        Update: {
+          day?: string
+          scope?: string
+          units?: number
+        }
+        Relationships: []
+      }
       marketing_drafts: {
         Row: {
           created_at: string
@@ -1754,6 +1814,19 @@ export type Database = {
       admin_dashboard: {
         Args: { p_from: string; p_until: string }
         Returns: Json
+      }
+      reserve_map_api_budget: {
+        Args: { p_units: number; p_user: string }
+        Returns: boolean
+      }
+      search_local_places: {
+        Args: { q: string }
+        Returns: {
+          category: string
+          label: string
+          latitude: number
+          longitude: number
+        }[]
       }
     }
     Enums: {
