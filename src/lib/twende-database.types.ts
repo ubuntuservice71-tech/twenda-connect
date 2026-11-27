@@ -1815,6 +1815,7 @@ export type Database = {
         Args: { p_from: string; p_until: string }
         Returns: Json
       }
+      import_local_place_drafts: { Args: { items: Json }; Returns: number }
       reserve_map_api_budget: {
         Args: { p_units: number; p_user: string }
         Returns: boolean

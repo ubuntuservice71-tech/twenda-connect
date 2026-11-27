@@ -18,3 +18,5 @@ export function calculateStreetRoute(args:Args<{from:[number,number];to:[number,
 export function loadGeoTiles(args:Args<{z:number;tiles:{x:number;y:number}[]}>){return invoke<{status:Status;reason?:string;tiles:{x:number;y:number;src:string}[]}>('tiles',args);}
 export function autocompleteStreet(args:Args<{query:string}>){return invoke<{status:Status;reason?:string;places:Place[]}>('autocomplete',args);}
 export function reverseStreet(args:Args<{point:[number,number]}>){return invoke<{status:Status;reason?:string;place:Place|null}>('reverse',args);}
+
+export function searchNamedPlaces(args:Args<{query:string}>){return invoke<{status:Status;reason?:string;places:Place[]}>('places',args);}

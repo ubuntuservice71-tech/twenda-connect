@@ -17,6 +17,13 @@ function geoKey(){return Deno.env.get("TWENDE_GEOAPIFY_API_KEY")?.trim()||null;}
 function geoUrl(path:string,key:string){const u=new URL("https://api.geoapify.com/v1/"+path);u.searchParams.set("apiKey",key);return u;}
 export async function geoSearch(query:string,key:string){const u=geoUrl("geocode/search",key);u.searchParams.set("text",query);u.searchParams.set("format","json");u.searchParams.set("filter","circle:35.2459,-13.2999,20000");u.searchParams.set("bias","proximity:"+launchCity.center.join(","));u.searchParams.set("lang","pt");u.searchParams.set("limit","8");return parseGeoapifyPlaces(await request(u));}
 async function autocomplete(query:string,key:string){const u=geoUrl("geocode/autocomplete",key);u.searchParams.set("text",query);u.searchParams.set("format","json");u.searchParams.set("filter","circle:35.2459,-13.2999,20000");u.searchParams.set("bias","proximity:35.2459,-13.2999");u.searchParams.set("lang","pt");u.searchParams.set("limit","8");return parseGeoapifyPlaces(await request(u));}
+async function namedPlaces(query:string,key:string):Promise<Place[]>{
+ const u=new URL("https://api.geoapify.com/v2/places");u.searchParams.set("apiKey",key);
+ u.searchParams.set("categories","service.vehicle.fuel,commercial,catering,education,healthcare,accommodation,tourism");
+ u.searchParams.set("name",query);u.searchParams.set("filter","circle:35.2459,-13.2999,20000");u.searchParams.set("bias","proximity:35.2459,-13.2999");u.searchParams.set("lang","pt");u.searchParams.set("limit","8");
+ const root=obj(await request(u));if(root?.["type"]!=="FeatureCollection"||!Array.isArray(root["features"]))throw Error("Invalid places response");
+ return root["features"].slice(0,8).flatMap(v=>{const f=obj(v),p=obj(f?.["properties"]),g=obj(f?.["geometry"]);const point=g?.["coordinates"];if(g?.["type"]!=="Point"||!isPoint(point)||!p||p["country_code"]!=="mz"||typeof p["name"]!=="string"||!p["name"].trim())return [];const name=p["name"].trim();const address=typeof p["formatted"]==="string"?p["formatted"].trim():"";return [{label:(address&&address!==name?name+" — "+address:name+", Lichinga").slice(0,240),point}];});
+}
 async function reverse(point:Point,key:string){const u=geoUrl("geocode/reverse",key);u.searchParams.set("lon",String(point[0]));u.searchParams.set("lat",String(point[1]));u.searchParams.set("format","json");u.searchParams.set("lang","pt");const v=obj(await request(u));const rows=v?.["results"];const r=Array.isArray(rows)?obj(rows[0]):null;if(!r||r["country_code"]!=="mz")return null;const parts=[r["suburb"]??r["district"]??r["neighbourhood"],r["city"]??r["town"]??r["village"]].filter((x):x is string=>typeof x==="string"&&x.trim().length>0);const label=[...new Set(parts)].join(", ")||(typeof r["formatted"]==="string"?r["formatted"]:"");return label.trim()?{label:label.slice(0,160),point}:null;}
 export async function geoRoute(from:Point,to:Point,vehicle:"car"|"motorcycle",key:string){const u=geoUrl("routing",key);u.searchParams.set("waypoints",[from,to].map(p=>p[1]+","+p[0]).join("|"));u.searchParams.set("mode",geoapifyMode(vehicle));u.searchParams.set("format","geojson");u.searchParams.set("units","metric");u.searchParams.set("lang","pt");return parseGeoapifyRoute(await request(u));}
 export async function geoTiles(z:number,tiles:TileCoordinate[]):Promise<{status:"unconfigured"|"ok"|"unavailable";tiles:{x:number;y:number;src:string}[]}>{
@@ -44,6 +51,7 @@ Deno.serve(async(req:Request)=>{
  if(!body||typeof body!=="object")return reply({error:"invalid_input"},400);
  const key=geoKey();let units=1;
  if(body.action==="search"||body.action==="autocomplete"){if(typeof body.query!=="string"||body.query.trim().length<3||body.query.trim().length>120)return reply({error:"invalid_query"},400);}
+ else if(body.action==="places"){if(typeof body.query!=="string"||body.query.trim().length<3||body.query.trim().length>120)return reply({error:"invalid_query"},400);units=10;}
  else if(body.action==="reverse"){if(!isPoint(body.point))return reply({error:"invalid_point"},400);}
  else if(body.action==="route"){if(!isPoint(body.from)||!isPoint(body.to)||Math.abs(body.from[1])>85.05112878||Math.abs(body.to[1])>85.05112878||!["car","motorcycle"].includes(body.vehicle))return reply({error:"invalid_route"},400);units=10;}
  else if(body.action==="tiles"){if(!Array.isArray(body.tiles)||body.tiles.length<1||body.tiles.length>9||body.tiles.some((t:TileCoordinate)=>!t||!validTile(body.z,t))||new Set(body.tiles.map((t:TileCoordinate)=>t.x+"/"+t.y)).size!==body.tiles.length)return reply({error:"invalid_tiles"},400);units=body.tiles.length;}
@@ -55,6 +63,7 @@ Deno.serve(async(req:Request)=>{
  try{
  if(body.action==="search")return reply({status:"ok",places:await geoSearch(body.query.trim(),key)});
  if(body.action==="autocomplete")return reply({status:"ok",places:await autocomplete(body.query.trim(),key)});
+ if(body.action==="places")return reply({status:"ok",places:await namedPlaces(body.query.trim(),key)});
  if(body.action==="reverse"){const place=await reverse(body.point,key);return reply({status:"ok",place});}
  if(body.action==="route"){const route=await geoRoute(body.from,body.to,body.vehicle,key);return reply({status:route?"ok":"unavailable",route});}
  return reply(await geoTiles(body.z,body.tiles));
