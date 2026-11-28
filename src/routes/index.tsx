@@ -19,7 +19,7 @@ function Index() {
   const back = () => { if(showAuth) setShowAuth(false); else setRole(""); };
   if(role === "admin" && !showAuth) return <AdminGate onBack={()=>setRole("")}/>;
   return (
-    <main className="twende-shell flex flex-col">
+    <main className={"twende-shell flex flex-col "+(role==="passenger"&&!showAuth?"tw-client-shell":"")}>
       <header className="bg-white border-b border-neutral-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-8 min-h-18 flex items-center justify-between gap-3">
           <button type="button" aria-label="TWENDE, início" onClick={()=>{setRole("");setShowAuth(false);}} className="flex items-center gap-2 text-2xl font-extrabold tracking-tight">
@@ -28,7 +28,7 @@ function Index() {
           <button type="button" className="tw-secondary flex items-center gap-2 text-sm" onClick={() => setShowAuth(v => !v)}><UserRound size={18} aria-hidden="true"/>{showAuth ? "Fechar conta" : "Minha conta"}</button>
         </div>
       </header>
-      <section className={`w-full mx-auto flex-1 px-4 sm:px-8 ${role==="passenger"&&!showAuth?"max-w-5xl py-2 sm:py-4":"max-w-xl py-6 sm:py-10"}`}>
+      <section className={`w-full mx-auto flex-1 px-4 sm:px-8 ${role==="passenger"&&!showAuth?"max-w-3xl py-2 sm:py-4":"max-w-xl py-6 sm:py-10"}`}>
         {(app || showAuth) && <button type="button" onClick={back} className="flex items-center gap-2 font-semibold mb-4"><ArrowLeft size={20} aria-hidden="true"/>Voltar</button>}
         {!(role==="passenger"&&!showAuth)&&<div className="mb-6">
           <span className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-600"><span className="h-2 w-2 rounded-full bg-yellow-400" aria-hidden="true"/>{showAuth ? "Conta" : app?.name || "Moçambique"} · Pré-visualização</span>
@@ -46,7 +46,7 @@ function Index() {
           </nav>
         )}
       </section>
-      <footer className="border-t border-neutral-200 p-4 text-center text-neutral-600 text-sm">TWENDE · Moçambique · Ambiente de demonstração</footer>
+      {!(role==="passenger"&&!showAuth)&&<footer className="border-t border-neutral-200 p-4 text-center text-neutral-600 text-sm">TWENDE · Moçambique · Ambiente de demonstração</footer>}
     </main>
   );
 }

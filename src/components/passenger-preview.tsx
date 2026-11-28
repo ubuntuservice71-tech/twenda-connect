@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {pilotCommand} from "./pilot-rides";
 import {CitySearch} from "./city-search";
 import {StreetPlanner} from "./street-planner";
@@ -6,11 +6,11 @@ import type {RoadRoute} from "../lib/street-geometry";
 import {parseCoordinates,distanceKm,formatCoordinates,type Point} from "../lib/geography";
 import {PlaceSuggestions,addressForPoint} from "./place-suggestions";
 import type {Place} from "../lib/street-geometry";
-import { ArrowRight, ArrowLeft, CarFront, Check, MapPin, LocateFixed, House, BriefcaseBusiness, Plane, Clock, Plus, Route, Info, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowRight, ArrowLeft, CarFront, Check, MapPin, LocateFixed, House, BriefcaseBusiness, Plane, Clock, Plus, Route, ChevronDown, ChevronUp, Search, ChevronRight } from "lucide-react";
 
 type Vehicle = "car" | "bike";
 type SavedPlace = "Casa" | "Trabalho";
-type Stage = "edit" | "review" | "confirmed";
+type Stage = "home" | "edit" | "vehicle" | "review" | "confirmed";
 
 function MotorcycleIcon() {
   return <svg viewBox="0 0 64 40" width="58" height="36" fill="none" aria-hidden="true" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
@@ -22,7 +22,7 @@ function MotorcycleIcon() {
 const money = (value:number) => value.toLocaleString("pt-PT",{minimumFractionDigits:2,maximumFractionDigits:2})+" MT";
 const parsePrice = (value:string) => /^\d+(?:[.,]\d{1,2})?$/.test(value.trim()) ? Number(value.trim().replace(",",".")) : NaN;
 
-export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boolean;onSubmitted?:(rideId?:string)=>void}) {
+export function PassengerPreview({canSubmit=false,onSubmitted,initialVehicle="car",startPlanning=false,onAccount}:{canSubmit?:boolean;onSubmitted?:(rideId?:string)=>void;initialVehicle?:Vehicle;startPlanning?:boolean;onAccount?:()=>void}) {
  const [submitting,setSubmitting]=useState(false),[submitError,setSubmitError]=useState("");
   const [origin,setOrigin]=useState("");
   const [destination,setDestination]=useState("");
@@ -31,10 +31,12 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
   const destinationRevision=useRef(0);
   const [reference,setReference]=useState("");
   const [showReference,setShowReference]=useState(false);
-  const [vehicle,setVehicle]=useState<Vehicle>("car");
+  const [vehicle,setVehicle]=useState<Vehicle>(initialVehicle);
   const [price,setPrice]=useState("");
-  const [stage,setStage]=useState<Stage>("edit");
-  const [sheetOpen,setSheetOpen]=useState(true);
+  const [stage,setStage]=useState<Stage>(startPlanning?"edit":"home");
+  const [sheetOpen,setSheetOpen]=useState(true),[showMap,setShowMap]=useState(false);
+  const stageHeading=useRef<HTMLHeadingElement>(null);
+  useEffect(()=>{if(stage!=="home")stageHeading.current?.focus();},[stage]);
   const [locating,setLocating]=useState(false);
   const [locationNotice,setLocationNotice]=useState("");
   const [saved,setSaved]=useState<Partial<Record<SavedPlace,string>>>({});
@@ -76,18 +78,28 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
     },{enableHighAccuracy:false,timeout:10000,maximumAge:0});
   };
   const cancelLocation=()=>{locationRequest.current++;setLocating(false);setLocationNotice("");};
-  const reset=()=>{destinationRevision.current++;cancelLocation();setOrigin("");setDestination("");setOriginLabel("");setDestinationLabel("");setSearchField(null);setRoad(null);setReference("");setShowReference(false);setPrice("");setSheetOpen(true);setStage("edit");};
-  return <section className="tw-rider tw-journey">
-    <p className="flex gap-2 items-center text-xs text-neutral-600" role="note"><Info size={16} className="shrink-0" aria-hidden="true"/>Modo piloto — pedidos de teste, sem deslocações ou pagamentos.</p>
-    <div className="tw-journey-map" aria-label="Mapa principal da viagem"><StreetPlanner compact readOnly={stage!=="edit"} origin={origin} destination={destination} vehicle={vehicle==="car"?"car":"motorcycle"} onOrigin={(v,label)=>mapPick("origin",v,label)} onDestination={(v,label)=>mapPick("destination",v,label)} onRoute={v=>setRoad(v?{key:routeKey,value:v}:null)} route={currentRoad}/></div>
-    <div className="tw-journey-sheet"><button type="button" className="tw-sheet-handle" aria-expanded={sheetOpen} aria-controls="tw-journey-details" onClick={()=>setSheetOpen(v=>!v)}><span className="tw-sheet-grip" aria-hidden="true"/><span>{stage==="edit"?"Para onde vamos?":stage==="review"?"Confirma a tua viagem":"Pedido registado"}</span>{sheetOpen?<ChevronDown size={18}/>:<ChevronUp size={18}/>}</button>
+  const reset=()=>{destinationRevision.current++;cancelLocation();setOrigin("");setDestination("");setOriginLabel("");setDestinationLabel("");setSearchField(null);setRoad(null);setReference("");setShowReference(false);setPrice("");setSheetOpen(true);setShowMap(false);setStage("home");};
+  const begin=(kind?:Vehicle)=>{if(kind)setVehicle(kind);setSheetOpen(true);setStage("edit");};
+  if(stage==="home")return <section className="tw-rider tw-client-home space-y-6">
+    <div className="flex items-center justify-between"><span className="inline-flex items-center gap-1.5 text-sm font-medium"><MapPin size={16}/>Lichinga, Niassa</span><span className="text-xs font-medium text-neutral-500">Modo piloto</span></div>
+    <h1 className="text-3xl font-bold tracking-tight">Para onde vamos?</h1>
+    <button type="button" className="tw-destination-search" onClick={()=>begin()}><Search size={24}/><span className="flex-1 text-left">Para onde vais?</span><ChevronRight size={20}/></button>
+    <div className="divide-y divide-neutral-200">{(["Casa","Trabalho"] as const).map(p=><button key={p} type="button" className="flex w-full items-center gap-3 py-3 text-left" onClick={()=>{begin();chooseSaved(p);}}><span className="tw-shortcut-icon">{p==="Casa"?<House size={20}/>:<BriefcaseBusiness size={20}/>}</span><span className="flex-1"><strong className="block">{p}</strong><span className="text-sm text-neutral-500">{saved[p]?"Usar endereço guardado":"Adicionar endereço"}</span></span><ChevronRight size={18}/></button>)}{recent.map(p=><button key={p.value} type="button" className="flex w-full items-center gap-3 py-3 text-left" onClick={()=>{begin();pickDestination(p.value);setDestinationLabel(p.label);}}><span className="tw-shortcut-icon"><Clock size={20}/></span><span className="flex-1 break-words">{p.label}</span><ChevronRight size={18}/></button>)}</div>
+    <div><h2 className="text-xl font-bold mb-3">Viaja à tua maneira</h2><div className="grid grid-cols-2 gap-3">{([{kind:"car",label:"Carro",detail:"Viajar de carro"},{kind:"bike",label:"Motociclo",detail:"1 passageiro"}] as const).map(v=><button key={v.kind} type="button" className="tw-service-tile" onClick={()=>begin(v.kind)}><span className="self-end text-neutral-900">{v.kind==="car"?<CarFront size={58} strokeWidth={1.5}/>:<MotorcycleIcon/>}</span><span className="font-bold text-lg">{v.label}</span><span className="text-xs text-neutral-600">{v.detail}</span></button>)}</div></div>
+    <div className="border-t border-neutral-200 pt-4"><button type="button" className="flex w-full gap-3 items-center text-left" onClick={()=>{begin();setShowMap(true);}}><span className="tw-shortcut-icon"><MapPin size={20}/></span><span className="flex-1"><strong className="block">Explorar o mapa</strong><span className="text-sm text-neutral-500">Escolher um ponto em Lichinga</span></span><ChevronRight size={18}/></button></div>
+    <p role="note" className="text-xs text-neutral-500">Ambiente de teste. Não são efectuadas viagens nem cobranças reais.</p>
+  </section>;
+  return <section className={"tw-rider tw-journey tw-client-flow "+(stage==="edit"&&!showMap?"tw-search-only":"")}>
+    <div className="tw-flow-header"><button type="button" aria-label="Voltar à etapa anterior" className="tw-flow-back" disabled={submitting} onClick={()=>{setSearchField(null);setSheetOpen(true);setStage(stage==="edit"?"home":stage==="vehicle"?"edit":stage==="review"?"vehicle":"home");}}><ArrowLeft size={23}/></button><h1 ref={stageHeading} tabIndex={-1} className="text-xl font-bold">{stage==="edit"?"Planear viagem":stage==="vehicle"?"Escolher viagem":stage==="review"?"Confirmar pedido":"Pedido registado"}</h1><span className="text-xs text-neutral-500 ml-auto">Piloto</span></div>
+    <div className="tw-journey-map" hidden={stage==="edit"&&!showMap} aria-label="Mapa principal da viagem"><StreetPlanner compact autoOpen={stage==="vehicle"} readOnly={stage!=="edit"} routeControls={stage==="vehicle"} origin={origin} destination={destination} vehicle={vehicle==="car"?"car":"motorcycle"} onOrigin={(v,label)=>mapPick("origin",v,label)} onDestination={(v,label)=>mapPick("destination",v,label)} onRoute={v=>setRoad(v?{key:routeKey,value:v}:null)} route={currentRoad}/></div>
+    <div className="tw-journey-sheet"><button type="button" className="tw-sheet-handle" aria-expanded={sheetOpen} aria-controls="tw-journey-details" onClick={()=>setSheetOpen(v=>!v)}><span className="tw-sheet-grip" aria-hidden="true"/><span>{stage==="edit"?"Partida e destino":stage==="vehicle"?"Opções de viagem":stage==="review"?"Confirma a tua viagem":"Pedido registado"}</span>{sheetOpen?<ChevronDown size={18}/>:<ChevronUp size={18}/>}</button>
     <div id="tw-journey-details" hidden={!sheetOpen} className="tw-journey-details">
     {stage==="edit" ? <>
-      <form id="twende-ride-form" className="space-y-4" onSubmit={e=>{e.preventDefault();if(valid){setSearchField(null);setSheetOpen(true);setStage("review");}}}>
+      <form id="twende-route-form" className="space-y-4" onSubmit={e=>{e.preventDefault();if(hasRoute&&!locating){setSearchField(null);setSheetOpen(true);setStage("vehicle");}}}>
         <section className="tw-sheet-section space-y-3" aria-labelledby="route-title">
-          <h2 id="route-title" className="text-lg font-bold">O teu percurso</h2>
-          <div className="relative border border-neutral-200 rounded-xl bg-white">
-            <div aria-hidden="true" className="absolute left-[26px] top-[39px] bottom-[39px] border-l border-dashed border-neutral-400"/>
+          <h2 id="route-title" className="sr-only">O teu percurso</h2>
+          <div className="relative border border-neutral-200 rounded-lg bg-white">
+            <div aria-hidden="true" className="absolute left-[26px] top-[39px] h-8 border-l border-dashed border-neutral-400"/>
             <label className="relative flex items-center gap-3 px-4 py-2">
               <span className="w-5 flex shrink-0 justify-center"><span className="w-3 h-3 border-[3px] border-neutral-900 rounded-full bg-white"/></span>
               <span className="flex-1 min-w-0"><span className="text-xs font-semibold text-neutral-600">Partida</span>
@@ -102,7 +114,7 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
             <PlaceSuggestions query={destination} active={searchField==="destination"&&!destinationLabel&&!parseCoordinates(destination)} onPick={p=>choosePlace("destination",p)}/>
           </div>
           <p className="text-xs text-neutral-500">Pesquisa local em Lichinga. Ao escrever ou usar GPS, os dados necessários são enviados ao fornecedor de mapas.</p>
-          <div className="flex flex-wrap gap-x-4 gap-y-1">
+          <div className="flex flex-wrap gap-x-4 gap-y-1"><button type="button" className="inline-flex items-center gap-2 text-sm font-semibold !min-h-11" aria-expanded={showMap} onClick={()=>setShowMap(v=>!v)}><MapPin size={18}/>{showMap?"Ocultar mapa":"Escolher no mapa"}</button>
             <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-800 !min-h-11" disabled={locating} onClick={locate}><LocateFixed size={18} aria-hidden="true"/>{locating?"A obter localização…":"Usar a minha localização"}</button>
             <button type="button" aria-expanded={showReference} className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-800 !min-h-11" onClick={()=>setShowReference(v=>!v)}><Plus size={18} aria-hidden="true"/>{showReference?"Ocultar referência":"Adicionar referência"}</button>
           </div>
@@ -123,12 +135,16 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
             {recent.length>0&&<div className="mt-3"><p className="text-xs text-neutral-600 font-semibold mb-1">Recentes</p>{recent.map(place=><button key={place.value} type="button" className="flex w-full text-left items-center gap-2 text-sm border-b border-neutral-100" onClick={()=>{pickDestination(place.value);setDestinationLabel(place.label);}}><Clock size={16} aria-hidden="true"/><span className="break-words">{place.label}</span></button>)}</div>}
           </div>
         </section>
+      </form><div className="tw-rider-action"><button type="submit" form="twende-route-form" disabled={!hasRoute||locating} className="tw-rider-cta w-full">Continuar <ArrowRight className="inline" size={18}/></button><p className="text-xs text-neutral-500 mt-2">Ao continuar, o mapa pode enviar a área escolhida ao fornecedor cartográfico.</p></div>
+    </>:stage==="vehicle"?<>
+      <div className="flex items-center justify-between gap-3 border-b border-neutral-200 pb-3"><div className="min-w-0"><p className="text-xs text-neutral-500 truncate">{originLabel||(startPoint?"Partida no mapa":origin)}</p><p className="font-semibold truncate">{destinationLabel||(endPoint?"Destino no mapa":destination)}</p></div><button type="button" className="text-sm font-semibold underline shrink-0" onClick={()=>setStage("edit")}>Editar</button></div>
+      <form id="twende-ride-form" className="space-y-4" onSubmit={e=>{e.preventDefault();if(valid){setSearchField(null);setSheetOpen(true);setStage("review");}}}>
         <fieldset className="space-y-3"><legend className="text-lg font-bold">Escolhe o veículo</legend>
           <div className="grid gap-2">
-            {([{id:"car",label:"Carro",detail:"Viagem de carro"},{id:"bike",label:"Motociclo",detail:"1 passageiro"}] as const).map(item=><button type="button" key={item.id} aria-pressed={vehicle===item.id} onClick={()=>setVehicle(item.id)} className="tw-choice relative rounded-xl bg-white border border-neutral-200 p-3 text-left flex items-center gap-4">
-              {vehicle===item.id&&<span className="absolute right-3 top-3 w-5 h-5 rounded-full bg-neutral-900 text-white flex items-center justify-center"><Check size={13} aria-hidden="true"/></span>}
+            {([{id:"car",label:"Carro",detail:"Viagem de carro"},{id:"bike",label:"Motociclo",detail:"1 passageiro"}] as const).map(item=><button type="button" key={item.id} aria-pressed={vehicle===item.id} onClick={()=>setVehicle(item.id)} className="tw-choice tw-vehicle-option rounded-lg bg-white border border-neutral-200 p-3 text-left flex items-center gap-3">
+              {vehicle===item.id&&<span className="order-last shrink-0 w-5 h-5 rounded-full bg-neutral-900 text-white flex items-center justify-center"><Check size={13} aria-hidden="true"/></span>}
               {item.id==="car"?<CarFront size={38} strokeWidth={1.8} aria-hidden="true"/>:<MotorcycleIcon/>}
-              <span className="flex-1 min-w-0 pr-7"><span className="block font-bold">{item.label}</span><span className="block text-xs text-neutral-600">{item.detail}</span></span><span className="text-xs text-neutral-500 pr-6">{vehicle===item.id&&Number.isFinite(amount)&&amount>0?money(amount):"Negociável"}</span>
+              <span className="flex-1 min-w-0"><span className="block font-bold">{item.label}</span><span className="block text-xs text-neutral-600">{item.detail}</span></span><span className="text-sm font-semibold text-neutral-700 whitespace-nowrap">{vehicle===item.id&&Number.isFinite(amount)&&amount>0?money(amount):"Negociável"}</span>
             </button>)}
           </div>
         </fieldset>
@@ -161,9 +177,9 @@ export function PassengerPreview({canSubmit=false,onSubmitted}:{canSubmit?:boole
         <div className="flex items-center justify-between gap-3"><span className="text-sm text-neutral-600">Veículo</span><strong>{vehicle==="car"?"Carro":"Motociclo"}</strong></div>
         <div className="border-t border-neutral-200 pt-4 flex items-center justify-between gap-3"><span className="text-sm text-neutral-600">Preço proposto</span><strong className="text-2xl tw-money">{money(amount)}</strong></div>
         <p className="text-sm text-neutral-600">O pedido-piloto será guardado e poderá receber propostas de teste. Não haverá deslocações nem cobranças.</p>
-        <button type="button" className="tw-secondary w-full flex items-center justify-center gap-2" onClick={()=>setStage("edit")}><ArrowLeft size={17} aria-hidden="true"/>Editar proposta</button>
+        <button type="button" className="tw-secondary w-full flex items-center justify-center gap-2" onClick={()=>setStage("vehicle")}><ArrowLeft size={17} aria-hidden="true"/>Editar proposta</button>
       </section>
-      <div className="tw-rider-action">{submitError&&<p role="alert" className="text-sm text-red-700">{submitError}</p>}{!canSubmit&&<p className="text-sm">Entra e guarda o perfil para criar um pedido-piloto.</p>}<button type="button" className="tw-rider-cta w-full" disabled={!canSubmit||submitting} onClick={async()=>{setSubmitting(true);setSubmitError("");try{const result=await pilotCommand({action:"request",origin:origin.trim(),destination:destination.trim(),vehicle_kind:vehicle==="car"?"car":"motorcycle",price_minor:Math.round(amount*100),pickup_reference:reference.trim()||null});setRecent(prev=>[{value:destination.trim(),label:destinationLabel||destination.trim()},...prev.filter(p=>p.value!==destination.trim())].slice(0,5));setStage("confirmed");onSubmitted?.(result.ride_id??undefined);}catch{setSubmitError("Pedido recusado. Confirma o perfil e se já existe um pedido aberto.");}finally{setSubmitting(false);}}}>Registar pedido-piloto</button></div>
+      <div className="tw-rider-action">{submitError&&<p role="alert" className="text-sm text-red-700">{submitError}</p>}{!canSubmit&&<div className="text-sm">Entra e guarda o perfil para criar um pedido-piloto. {onAccount&&<button type="button" className="font-semibold underline" onClick={onAccount}>Ir à conta</button>}</div>}<button type="button" className="tw-rider-cta w-full" disabled={!canSubmit||submitting} onClick={async()=>{setSubmitting(true);setSubmitError("");try{const result=await pilotCommand({action:"request",origin:origin.trim(),destination:destination.trim(),vehicle_kind:vehicle==="car"?"car":"motorcycle",price_minor:Math.round(amount*100),pickup_reference:reference.trim()||null});setRecent(prev=>[{value:destination.trim(),label:destinationLabel||destination.trim()},...prev.filter(p=>p.value!==destination.trim())].slice(0,5));setStage("confirmed");onSubmitted?.(result.ride_id??undefined);}catch{setSubmitError("Pedido recusado. Confirma o perfil e se já existe um pedido aberto.");}finally{setSubmitting(false);}}}>Registar pedido-piloto</button></div>
     </>:<section className="tw-panel text-center space-y-4" aria-live="polite">
       <span className="mx-auto flex w-14 h-14 rounded-full bg-yellow-100 items-center justify-center"><Check size={28} aria-hidden="true"/></span>
       <h2 className="text-xl font-bold">Pedido-piloto registado</h2><p className="text-sm text-neutral-600">A proposta foi guardada para teste. Não houve viagem nem cobrança.</p><button type="button" className="tw-rider-cta w-full" onClick={reset}>Planear outra viagem</button>

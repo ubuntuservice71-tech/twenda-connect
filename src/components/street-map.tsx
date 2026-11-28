@@ -13,9 +13,10 @@ type Motion={dx:number;dy:number;scale:number;anchor:Point};
 const still:Motion={dx:0,dy:0,scale:1,anchor:[W/2,H/2]};
 const midpoint=(a:Point,b:Point):Point=>[(a[0]+b[0])/2,(a[1]+b[1])/2];
 const span=(a:Point,b:Point)=>Math.max(1,Math.hypot(a[0]-b[0],a[1]-b[1]));
-export function StreetMap({start,end,route=[],onPick,compact=false,readOnly=false}:{start:Point|null;end:Point|null;route?:Point[];onPick:(p:Point)=>void;compact?:boolean;readOnly?:boolean}){
+export function StreetMap({start,end,route=[],onPick,compact=false,readOnly=false,autoOpen=false}:{start:Point|null;end:Point|null;route?:Point[];onPick:(p:Point)=>void;compact?:boolean;readOnly?:boolean;autoOpen?:boolean}){
  const [source,setSource]=useState<"geoapify"|"osm">("geoapify"),[enabled,setEnabled]=useState(false),[camera,setCamera]=useState<Camera>({center:start??end??launchCity.center,zoom:13}),[expanded,setExpanded]=useState(false),[failure,setFailure]=useState(false),[motion,setMotion]=useState<Motion>(still),[dragging,setDragging]=useState(false);
  const [retry,setRetry]=useState(0);
+ useEffect(()=>{if(autoOpen){setSource("geoapify");setEnabled(true);}},[autoOpen]);
  const pointers=useRef(new Map<number,Point>()),gesture=useRef<Gesture|null>(null),motionRef=useRef<Motion>(still),lastTap=useRef(0);
  const surface=useRef<HTMLDivElement>(null);
  const {center,zoom}=camera,[x,y]=project(center,zoom);
